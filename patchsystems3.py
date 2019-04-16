@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import xmlrpclib,  argparse,  getpass,  textwrap,  sys
-from datetime import datetime
+from datetime import datetime,  timedelta
 #from array import *
 
 class Password(argparse.Action):
@@ -34,11 +34,13 @@ MANAGER_PASSWORD = args.password
 session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
 session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
 today = datetime.today()
+nowlater = datetime.now() + timedelta(hours=2)
+isonowlater = nowlater.isoformat()
 dateTimeObj = datetime.now()
 timestampStr = dateTimeObj.strftime("%d-%b-%Y_%H:%M:%S")
 print('Current Timestamp : ', timestampStr)
  
-earliest_occurrence = xmlrpclib.DateTime(today)
+earliest_occurrence = xmlrpclib.DateTime(nowlater)
 
 allgroups = session_client.systemgroup.listAllGroups(session_key)
 finalpatches = []
@@ -71,7 +73,7 @@ print(patch_list)
 
 for p in patch_list:
     try:
-        actionid = session_client.systemgroup.scheduleApplyErrataToActive(session_key, args.group_name, p)
+        actionid = session_client.systemgroup.scheduleApplyErrataToActive(session_key, args.group_name, p,  earliest_occurrence)
     except:
         print()
         
