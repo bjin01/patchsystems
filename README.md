@@ -1,4 +1,4 @@
-# spacewalk patchsystems (SLES)
+# SUSE Manager - patch systems (SLES) automation
 # xmlrpc api python script: patch all systems of a group
 
 The idea is to provide a python script using spacewalk api to patch all systems within a given group and within an maintanance window of around three hours with system reboots.
