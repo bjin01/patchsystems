@@ -30,3 +30,8 @@ Reboot scheduling is running for 2 hours and constantly checking for systems whi
 Script will end at 2019-04-16 16:10:21.315888
 
 Script will end at 2019-04-16 16:10:31.643638
+
+## future improvments:
+1. add RHEL package install support
+2. Intensive testing for reboot schedule is needed if you want to deploy patches to several hundreds systems.
+3. Add salt grains to indicate staging environment
