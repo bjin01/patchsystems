@@ -68,7 +68,7 @@ while y:
                     print(r['created_date'])
                     if r['created_date'] > isonowlater1:
                         if r['failed_count'] != 0 or r['successful_count'] != 0:
-                            mycount = ++mycount
+                            mycount = mycount + r['failed_count'] + r['successful_count']
                         else:
                             mycount = 200000000
                 if mycount >= len(systemevents):
