@@ -17,7 +17,7 @@ The patchsystems3.py will check followings:
 
 ### sample job output
 
-`# python patchsystems3.py -x -s bjsuma.bo2go.home -u bjin -p suse1234 -g "test1"
+`python patchsystems3.py -x -s bjsuma.bo2go.home -u bjin -p suse1234 -g "test1"
 
 Targeting group name: test1      with 2 systems.
 
@@ -29,5 +29,4 @@ Reboot scheduling is running for 2 hours and constantly checking for systems whi
 
 Script will end at 2019-04-16 16:10:21.315888
 
-Script will end at 2019-04-16 16:10:31.643638
-`
+Script will end at 2019-04-16 16:10:31.643638`
