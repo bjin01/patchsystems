@@ -1,9 +1,9 @@
-# patchsystems
-spacewalk patch all systems of a group
+## patchsystems
+# spacewalk patch all systems of a group
 
 The idea is to provide a python script using spacewalk api to patch all systems within a given group.
 
-Commandline sample:
+__Commandline sample:__
 python patchsystems3.py -x -s bjsuma.bo2go.home -u bjin -p suse1234 -g "test1"
 
 The patchsystems3.py will check followings:
