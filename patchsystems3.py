@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import xmlrpclib,  argparse,  getpass,  textwrap,  sys
+import xmlrpclib,  argparse,  getpass,  textwrap,  sys,  subprocess,  shlex
 from datetime import datetime,  timedelta
 #from array import *
 
@@ -38,7 +38,7 @@ nowlater = datetime.now() + timedelta(hours=2)
 isonowlater = nowlater.isoformat()
 dateTimeObj = datetime.now()
 timestampStr = dateTimeObj.strftime("%d-%b-%Y_%H:%M:%S")
-print('Current Timestamp : ', timestampStr)
+#print('Current Timestamp : ', timestampStr)
  
 earliest_occurrence = xmlrpclib.DateTime(nowlater)
 
@@ -46,7 +46,8 @@ allgroups = session_client.systemgroup.listAllGroups(session_key)
 finalpatches = []
         
 for a in allgroups:
-    print("Group name: %s\t with %s systems." %(a['name'],  str(a['system_count'])))
+    if a['name'] == args.group_name:
+        print("Targeting group name: %s\t with %s systems." %(a['name'],  str(a['system_count'])))
 
 if args.group_name:
     try:
@@ -65,18 +66,21 @@ if args.group_name:
         print("something went wrong. The groupname could not be validated.")
 else:
     sys.exit(1)
-print(len(finalpatches))
 patch_set = set(finalpatches)
-print(len(patch_set))
+print("Total number of patches to be applied: %s" %(len(patch_set)))
 patch_list = list(patch_set)
-print(patch_list)
+#print(patch_list)
 
 for p in patch_list:
     try:
         actionid = session_client.systemgroup.scheduleApplyErrataToActive(session_key, args.group_name, p,  earliest_occurrence)
     except:
-        print()
+        continue
         
+params = "python schedulereboot.py " +" -s " + args.server + " -u " + args.username + " -p " + args.password + " -g " + args.group_name
+myargs = shlex.split(params)
+#print(myargs)
+subprocess.Popen(myargs)
 
 
 

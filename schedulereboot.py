@@ -1,8 +1,6 @@
 #!/usr/bin/python
-import xmlrpclib,  argparse,  getpass,  textwrap,  sys
+import xmlrpclib,  argparse,  getpass,  textwrap,  sys,  time
 from datetime import datetime,  timedelta
-import dateutil.parser
-#from array import *
 
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -18,7 +16,7 @@ This scripts runs service pack migration for given base channel.
 
 Sample command:
 
-              python patchsystems.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g DEV-SLES12SP3 \n \
+              python schedulereboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g DEV-SLES12SP3 \n \
 
 If -x is not specified the SP Migration is always a dryRun.
 Check Job status of the system if dryrun was successful before run the above command with -x specified. ''')) 
@@ -50,29 +48,41 @@ mycount = 0
 for a in allgroups:
     print("Group name: %s\t with %s systems." %(a['name'],  str(a['system_count'])))
 
-if args.group_name:
-    try:
-        systemlist = session_client.systemgroup.listActiveSystemsInGroup(session_key, args.group_name)
-        print("system group %s found!" %(args.group_name))
-        for e in systemlist:
-            systemevents = session_client.system.listSystemEvents(session_key, e)
-            print("number of systemevents is: %s" %(len(systemevents)))
-            for r in systemevents:
-                print(r['created_date'])
-                if r['created_date'] > isonowlater1:
-                    if r['failed_count'] != 0 or r['successful_count'] != 0:
-                        mycount = ++mycount
-                    else:
-                        mycount = 200000000
-            if mycount >= len(systemevents):
-                rebootjob = session_client.system.scheduleReboot(session_key, e,  earliest_occurrence)
-                print("A reboot job with id %s has been scheduled for %s" %(rebootjob, e))
-            else:
-                print("No system is qualified for a reboot!")
-    except:
-        print("something went wrong. The groupname could not be validated.")
-else:
-    sys.exit(1)
+y = 1 
+while y:
+    print ('Reboot scheduling is running for 2 hours and constantly checking for systems which need reboots and schedule it upon patch job status..')
+    dt = datetime.now() + timedelta(hours=2)
+    dt = dt.replace(minute=10)
+
+    while datetime.now() < dt:
+        print('Script will end at %s' %(dt))
+        time.sleep(600)
+    if args.group_name:
+        try:
+            systemlist = session_client.systemgroup.listActiveSystemsInGroup(session_key, args.group_name)
+            print("system group %s found!" %(args.group_name))
+            for e in systemlist:
+                systemevents = session_client.system.listSystemEvents(session_key, e)
+                print("number of systemevents is: %s" %(len(systemevents)))
+                for r in systemevents:
+                    print(r['created_date'])
+                    if r['created_date'] > isonowlater1:
+                        if r['failed_count'] != 0 or r['successful_count'] != 0:
+                            mycount = ++mycount
+                        else:
+                            mycount = 200000000
+                if mycount >= len(systemevents):
+                    rebootjob = session_client.system.scheduleReboot(session_key, e,  earliest_occurrence)
+                    print("A reboot job with id %s has been scheduled for %s" %(rebootjob, e))
+                else:
+                    print("No system is qualified for a reboot!")
+        except:
+            print("something went wrong. The groupname could not be validated.")
+    else:
+        sys.exit(1)
+    
+    if datetime.now() >= dt:
+        y = 0
 
         
 
