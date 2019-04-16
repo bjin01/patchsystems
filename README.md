@@ -1,5 +1,5 @@
-## patchsystems
-# spacewalk patch all systems of a group
+# spacewalk patchsystems (SLES)
+# xmlrpc api python script: patch all systems of a group
 
 The idea is to provide a python script using spacewalk api to patch all systems within a given group.
 
