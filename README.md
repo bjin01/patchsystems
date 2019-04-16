@@ -4,7 +4,7 @@
 The idea is to provide a python script using spacewalk api to patch all systems within a given group.
 
 __Commandline sample:__
-`python patchsystems3.py -x -s bjsuma.bo2go.home -u bjin -p suse1234 -g "test1"`
+`python patchsystems3.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g "testgroup"`
 
 The patchsystems3.py will check followings:
 1. Is the given group available?
