@@ -16,7 +16,7 @@ The patchsystems3.py will check followings:
 5. __system reboot: after job creation the script calls an subprocess script schedulereboot.py to constantly check the remaining patch jobs which have been created within the last two hours and if no more jobs open (pending) then a reboot job will be scheduled.__
 
 ### sample job output
-`# python patchsystems3.py -x -s bjsuma.bo2go.home -u bjin -p suse1234 -g "test1"
+`# python patchsystems3.py -x -s bjsuma.bo2go.home -u bjin -p suse1234 -g "test1"`
 Targeting group name: test1      with 2 systems.
 system group test1 found!
 Total number of patches to be applied: 141
