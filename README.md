@@ -6,30 +6,21 @@ The idea is to provide a python script using spacewalk api to patch all systems 
 The python script will be triggered through crontab on suse manager host at a given point in time.
 
 __Commandline sample:__
-`python patchsystems3.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g "testgroup"`
+`python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g "testgroup" -o 2 -r`
 
-The patchsystems3.py will check followings:
+The patchsystemsByGroupWithRebootV2.py will check followings:
 1. Is the given group available?
-2. Are the systems within group active?
-3. Which patches are relevant or applicable for the systems within the given systemgroup?
-4. Create patch apply jobs for the affected systems withint the given systemgroup.
-5. __system reboot: after job creation the script calls an subprocess script schedulereboot.py to constantly check the remaining patch jobs which have been created within the last two hours and if no more jobs open (pending) then a reboot job will be scheduled.__
+2. Are the systems within group active? Inactive systems will be left out from further processing.
+3. Create patch apply jobs for the affected systems of the systemgroup.
+4. -o ("--in_hours") parameter is giving the number of hours from now on the jobs should be scheduled for.  
+5. __system reboot: with -r parameter all active systems will also get a reboot job scheduled. This parameter is optional. The reboot happens one hour after the start time of patch jobs. So if your patch job is about to start in 2 hours the reboot job will be scheduled to start in 3 hours from the time when this script got executed.__
+6. This script will also generate a joblist.json file into the current working directory and stores the action id of the jobs for later status queries.
 
-### sample job output:
-
-python patchsystems3.py -x -s bjsuma.bo2go.home -u bjin -p suse1234 -g "test1"
-
-Targeting group name: test1      with 2 systems.
-
-system group test1 found!
-
-Total number of patches to be applied: 141
-
-Reboot scheduling is running for 2 hours and constantly checking for systems which need reboots and schedule it upon patch job status..
-
-Script will end at 2019-04-16 16:10:21.315888
-
-Script will end at 2019-04-16 16:10:31.643638
+__Recent Enhancements:__
+1. cancelAllActions.py can be used to delete all action id which was created by the patchsystemsByGroupWithRebootV2.py script. 
+`python cancelAllActions.py -s bjsuma.bo2go.home -u bjin -p suse1234 -f ./joblist.json`
+2. jobstatus.py shows the job status of the recently created jobs into terminal and optionally into given output file.
+`python jobstatus.py -s bjsuma.bo2go.home -u bjin -p suse1234 -f ./joblist.json -o /var/log/jobstatus_list.log`
 
 ## future improvments:
 1. add RHEL package install support
