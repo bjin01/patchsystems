@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import xmlrpclib,  argparse,  getpass,  textwrap,  json
+import xmlrpclib,  argparse,  getpass,  textwrap,  json, sys
 from datetime import datetime,  timedelta
 from collections import defaultdict
 #from array import *
@@ -52,20 +52,23 @@ def scheduleReboot(serverid,  servername):
 def json_write(mydict):
         with open("joblist.json", "w") as write_file:
             json.dump(mydict, write_file,  indent=4)
-            
+
 if args.group_name:
+    
     for a in allgroups:
+        grpfound = 'false'
         if a['name'] == args.group_name:
             print("Targeting group name: %s with %s systems." %(a['name'],  str(a['system_count'])))
             grpfound = 'true'
+            try:
+                activesystemlist = session_client.systemgroup.listActiveSystemsInGroup(session_key, args.group_name)
+                print("activesystemlist is: %s" %(activesystemlist))
+            except:
+                error1 = 1
+                print("uups something went wrong. We could not find the active systems in the given group name. Maybe the group is empty.")
             break
-    try:
-        activesystemlist = session_client.systemgroup.listActiveSystemsInGroup(session_key, args.group_name)
-        print("activesystemlist is: %s" %(activesystemlist))
-    except:
-        error1 = 1
-        print("uups something went wrong. We could not find the active systems in the given group name. Maybe the group is empty.")
-        
+    
+    
     for e in activesystemlist:
         system_erratalist = []
         erratalist = session_client.system.getRelevantErrata(session_key, e)
