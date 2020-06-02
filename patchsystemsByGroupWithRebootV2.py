@@ -68,6 +68,10 @@ if args.group_name:
                 print("uups something went wrong. We could not find the active systems in the given group name. Maybe the group is empty.")
             break
     
+    if grpfound == 'false':
+        print("sorry we could not find the group you provided. Check if it exists or case-sensitive name correctness.")
+        sys.exit(1)
+    
     
     for e in activesystemlist:
         system_erratalist = []
