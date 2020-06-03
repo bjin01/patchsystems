@@ -54,9 +54,9 @@ def json_write(mydict):
             json.dump(mydict, write_file,  indent=4)
 
 if args.group_name:
-    
+    grpfound = 'false'
     for a in allgroups:
-        grpfound = 'false'
+        
         if a['name'] == args.group_name:
             print("Targeting group name: %s with %s systems." %(a['name'],  str(a['system_count'])))
             grpfound = 'true'
@@ -76,9 +76,16 @@ if args.group_name:
     for e in activesystemlist:
         system_erratalist = []
         erratalist = session_client.system.getRelevantErrata(session_key, e)
+        if not erratalist:
+            system_name = session_client.system.getName(session_key, e)
+            print("All good. No patch needed:\t %s" %(system_name['name']))
+            continue
+            
         for s in erratalist:    
             system_erratalist.append(s['id'])
-        try:    
+            
+        try:
+                
             system_actionid = session_client.system.scheduleApplyErrata(session_key, e,  system_erratalist,  earliest_occurrence)
             del system_erratalist
             system_name = session_client.system.getName(session_key, e)
@@ -87,12 +94,15 @@ if args.group_name:
             jobsdict[system_name['name']]['serverid']= e
             for s in system_actionid: 
                 jobsdict[system_name['name']]['Patch_jobs'][s] =  'pending'
-            print("Job ID %s for %s has been created" %(str(system_actionid),  (str(e))))
+            print("Job ID %s for %s %s has been created" %(str(system_actionid),  (str(e)), system_name['name']))
             if args.reboot:
                 scheduleReboot(e,  system_name['name'])
+            
+                
         except:
             error1 = 1
-            print("uups something went wrong. We could not create scheduleApplyErrata for %s." %(str(e)))
+            system_name = session_client.system.getName(session_key, e)
+            print("uups something went wrong. We could not create scheduleApplyErrata for:\t %s." %(system_name['name']))
             print("one possible reason is the targeted systems already have pending patch and reboot jobs scheduled.")
 
 if error1 != 1:
