@@ -16,11 +16,18 @@ The patchsystemsByGroupWithRebootV2.py will check followings:
 5. __system reboot: with -r parameter all active systems will also get a reboot job scheduled. This parameter is optional. The reboot happens one hour after the start time of patch jobs. So if your patch job is about to start in 2 hours the reboot job will be scheduled to start in 3 hours from the time when this script got executed.__
 6. This script will also generate a joblist.json file into the current working directory and stores the action id of the jobs for later status queries.
 
+
 __Recent Enhancements:__
 1. cancelAllActions.py can be used to delete all action id which was created by the patchsystemsByGroupWithRebootV2.py script. 
 `python cancelAllActions.py -s bjsuma.bo2go.home -u bjin -p suse1234 -f ./joblist.json`
 2. jobstatus.py shows the job status of the recently created jobs into terminal and optionally into given output file.
 `python jobstatus.py -s bjsuma.bo2go.home -u bjin -p suse1234 -f ./joblist.json -o /var/log/jobstatus_list.log`
+
+3. a new feature has been added (June 2020)
+-sr, --schedule_reboot: provide exact desired reboot time in format e.g. 15:30 20-04-1970. This param is optional but the desired schedule reboot time is not allowed to be earliert than the desired patch install time otherwise script will exit with error.
+
+4. if running script without -o and -sr but with -r for reboot - then it will create patch install jobs for now + a timeshifted reboot job of now + 10 minutes. This 10minutes allow reboot jobs occur after install jobs.
+   
 
 ## future improvments:
 1. add RHEL package install support
