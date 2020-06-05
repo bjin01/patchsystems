@@ -24,7 +24,7 @@ __Recent Enhancements:__
 `python jobstatus.py -s bjsuma.bo2go.home -u bjin -p suse1234 -f ./joblist.json -o /var/log/jobstatus_list.log`
 
 3. a new feature has been added (June 2020)
--sr, --schedule_reboot: provide exact desired reboot time in format e.g. 15:30 20-04-1970. This param is optional but the desired schedule reboot time is not allowed to be earliert than the desired patch install time otherwise script will exit with error.
+-sr, --schedule_reboot: provide exact desired reboot time in format e.g. 15:30 20-04-1970. This param is optional but the desired schedule reboot time must not to be earlier than the desired patch install time otherwise script will exit with error.
 
 4. if running script without -o and -sr but with -r for reboot - then it will create patch install jobs for now + a timeshifted reboot job of now + 10 minutes. This 10minutes allow reboot jobs occur after install jobs.
    
