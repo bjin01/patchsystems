@@ -21,7 +21,7 @@ parser.add_argument("-s", "--server", help="Enter your suse manager host address
 parser.add_argument("-u", "--username", help="Enter your suse manager loginid e.g. admin ", default='admin',  required=True)
 parser.add_argument('-p', action=Password, nargs='?', dest='password', help='Enter your password',  required=True)
 parser.add_argument("-g", "--group_name", help="Enter a valid groupname. e.g. DEV-SLES12SP3 ",  required=True)
-parser.add_argument("-o", "--in_hours", help="in how many hours should the job be started. e.g. 2 ",  required=True)
+parser.add_argument("-o", "--in_hours", help="in how many hours should the job be started. e.g. 2 ",  required=False)
 parser.add_argument("-sr", "--schedule_reboot", help="when it should reboot in format 15:30 20-04-1970",  required=False)
 parser.add_argument("-r", "--reboot", help="if this optional argument is provided then a reboot jobs schedules for one hour later then patch jobs will be scheduled as well.", required=False)
 args = parser.parse_args()
@@ -38,7 +38,30 @@ MANAGER_PASSWORD = args.password
 
 session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
 session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
-nowlater = datetime.now() + timedelta(hours=int(args.in_hours))
+
+if args.in_hours:
+    check_install_time = datetime.now() + timedelta(hours=int(args.in_hours))
+else:
+    check_install_time = datetime.now()
+if args.schedule_reboot:
+    check_schedule_reboot_time = datetime.strptime(args.schedule_reboot, "%H:%M %d-%m-%Y")
+else:
+    check_schedule_reboot_time = datetime.now() + timedelta(minutes=10)
+
+if check_install_time and check_schedule_reboot_time:
+    if check_schedule_reboot_time <= check_install_time:
+        print("Error: Your desired reboot schedule time happens earlier than your desired install time. That is not a good idea.")
+        sys.exit(1)
+    elif check_schedule_reboot_time <= datetime.now():
+        print("Error: Your desired reboot schedule time happens earlier than current time. That is not a good idea.")
+        sys.exit(1)
+
+
+
+if args.in_hours:
+    nowlater = datetime.now() + timedelta(hours=int(args.in_hours))
+else:
+    nowlater = datetime.now()
 earliest_occurrence = xmlrpclib.DateTime(nowlater)
 allgroups = session_client.systemgroup.listAllGroups(session_key)
 
@@ -56,7 +79,7 @@ def scheduleReboot(serverid,  servername):
     elif args.schedule_reboot and args.in_hours :
         reboottime = datetime.strptime(args.schedule_reboot, "%H:%M %d-%m-%Y")
     else:
-        reboottime = datetime.now()
+        reboottime = datetime.now() + timedelta(minutes=10)
 
     earliest_occurrence_reboot = xmlrpclib.DateTime(reboottime)
     reboot_jobid = session_client.system.scheduleReboot(session_key, serverid,  earliest_occurrence_reboot)
