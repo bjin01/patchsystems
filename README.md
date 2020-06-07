@@ -40,9 +40,9 @@ __jobstatus.py__ shows status from jobs which had been created by patchsystemsBy
 ```python jobstatus.py -s bjsuma.bo2go.home -u bjin -p suse1234 -f ./joblist.json -o /var/log/jobstatus_list.log```
 
 
-1. the script accept parameter of desired job log file location.
-2. the script reads in the joblist.json file which was written by patchsystemsByGroupWithRebootV2.py as output for created jobs.
-3. the script will also monitor if affected systems patch jobs once successfully finished would need a system reboot. If reboot needed the script will create reboot jobs to be executed immediately.
+1. the script accepts parameters of desired job log file location with -o option.
+2. the script reads in the joblist.json file which was written by patchsystemsByGroupWithRebootV2.py with jobid information for each system.
+3. the script will also monitors if affected systems need a system reboot once patch job completed. If reboot is needed the script will create reboot jobs for immediate run.
 4. the script is running in loop and can be interrupted by pressing "ctrl+'c'" keyboard sequences.
 
 ### hint:
