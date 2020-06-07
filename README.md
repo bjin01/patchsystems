@@ -33,3 +33,17 @@ __Recent Enhancements:__
 1. add RHEL package install support
 2. Intensive testing for reboot schedule is needed if you want to deploy patches to several hundreds systems.
 3. Add salt grains to indicate staging environment
+
+## monitoring job status
+__jobstatus.py__ shows status from jobs which had been created by patchsystemsByGroupWithRebootV2.py.
+
+```python jobstatus.py -s bjsuma.bo2go.home -u bjin -p suse1234 -f ./joblist.json -o /var/log/jobstatus_list.log```
+
+
+1. the script accept parameter of desired job log file location.
+2. the script reads in the joblist.json file which was written by patchsystemsByGroupWithRebootV2.py as output for created jobs.
+3. the script will also monitor if affected systems patch jobs once successfully finished would need a system reboot. If reboot needed the script will create reboot jobs to be executed immediately.
+4. the script is running in loop and can be interrupted by pressing "ctrl+'c'" keyboard sequences.
+
+### hint:
+You might create a systemd unit file to run this jobstatus.py script as systemd service and monitor the log file with tail -f.
