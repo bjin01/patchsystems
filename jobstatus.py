@@ -1,7 +1,8 @@
 #!/usr/bin/python
-import xmlrpclib,  argparse,  getpass,  textwrap,  json
+import xmlrpclib,  argparse,  getpass,  textwrap,  json, time, sys
 from collections import defaultdict
 from datetime import datetime
+from copy import deepcopy
 
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -34,12 +35,9 @@ jobsdict = nested_dict
 jobsdict = {}
 status_update_dict = {}
 now = datetime.now()
+earliest_occurrence = xmlrpclib.DateTime(now)
 dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
 final_status = {}
-
-if args.output_file:
-    with open(args.output_file, "w") as write_file:
-        write_file.write('Job Output: \t ' + dt_string + '\n')
         
 def write_status():
     #print(tabulate([status_update_dict], headers=['Server_Name', 'Job_Type',  'JobID',  'Status']))
@@ -90,6 +88,8 @@ def completed(jobid, serverid,  job_type):
             status_update_dict['JobID'] = str(jobid)
             status_update_dict['Job_Status'] = 'completed'
             status_update_dict['Job_Type'] = job_type
+            if "Patch_jobs" in job_type:
+                trigger_reboot(serverid)
             write_status()
             return 1
             break
@@ -108,51 +108,115 @@ def failed(jobid, serverid,  job_type):
             break
     return 0
 
-with open(args.jsonfile, "r") as r_file:
-    jobstatus_dict = json.load(r_file)
+def trigger_reboot(serverid):
+    needRebootSystems = session_client.system.listSuggestedReboot(session_key)
+    #print("Checking if system need reboot via api.")
+    reboot_jobid = 0
+    
+    for a in needRebootSystems:
+        if a['id'] == serverid:
+            if "needReboot_jobs" not in copy_jobstatus_dict[a['name']]:
+                try:
+                    reboot_jobid = session_client.system.scheduleReboot(session_key, serverid, earliest_occurrence)
+                except:
+                    print("uups, creating a reboot job failed.")
+                if reboot_jobid != 0:
+                    temp_dict = { 'needReboot_jobs': { reboot_jobid: 'pending' } }
+                    copy_jobstatus_dict[a['name']].update(temp_dict)
+                    json_write(copy_jobstatus_dict)
+                    #jobstatus_dict[a['name']]['Reboot_jobs'].update(reboot_jobid = 'pending')
+                    print("A reboot job: %s \tfor %s has been created." %(str(reboot_jobid), a['name']))
+                break
+    return reboot_jobid
 
-print("\n\033[96mPatch Job Status:\033[00m")
-print('{0: <30}'.format('System Name') + '{0: <10}'.format('JobID') + '{0: >15}'.format('Job Status' ))
-print('-----------------------------------------------------------------------------------------')
-if args.output_file:
-    with open(args.output_file, "a") as write_file:
-        write_file.write("\nPatch Job Status:\n")
-for k, v in jobstatus_dict.iteritems():
-  
-  for a,  b in v.iteritems():
-      if a == 'serverid':
-            server_id = b
-      if a == 'Patch_jobs':
-          for jobid,  jobstatus in b.iteritems():
-              completed_return = completed(int(jobid), int(server_id),  a)
-              if completed_return == 0:
-                    failed_return = failed(int(jobid), int(server_id),  a)
-              if failed_return == 0:
-                    progress_return = inprogress(int(jobid), int(server_id),  a)
+def json_write(mydict):
+        with open("joblist.json", "w") as write_file:
+            json.dump(mydict, write_file,  indent=4)
 
-print("\n\033[96mReboot Job Status:\033[00m")
-print('{0: <30}'.format('System Name') + '{0: <10}'.format('JobID') + '{0: >15}'.format('Job Status' ))
-print('-----------------------------------------------------------------------------------------')
-if args.output_file:
-    with open(args.output_file, "a") as write_file:
-        write_file.write("\n\nReboot Job Status:\n")
-for k, v in jobstatus_dict.iteritems():
-  
-  for a,  b in v.iteritems():
-      if a == 'serverid':
-            server_id = b
-      if a == 'Reboot_jobs':
-          for jobid,  jobstatus in b.iteritems():
-              completed_return = completed(int(jobid), int(server_id),  a)
-              if completed_return == 0:
-                    failed_return = failed(int(jobid), int(server_id),  a)
-              if failed_return == 0:
-                    progress_return = inprogress(int(jobid), int(server_id),  a)
+def main_loop():
+    while 1:
+        if args.output_file:
+            with open(args.output_file, "w") as write_file:
+                write_file.write('Job Output: \t ' + dt_string + '\n')
 
-if args.output_file:
-    print("You can find the job status log in {}".format(args.output_file))
-session_client.auth.logout(session_key)
+        with open(args.jsonfile, "r") as r_file:
+            jobstatus_dict = json.load(r_file)
 
+        copy_jobstatus_dict = deepcopy(jobstatus_dict)
+
+        print("\n\033[96mPatch Job Status:\033[00m")
+        print('{0: <30}'.format('System Name') + '{0: <10}'.format('JobID') + '{0: >15}'.format('Job Status' ))
+        print('-----------------------------------------------------------------------------------------')
+        if args.output_file:
+            with open(args.output_file, "a") as write_file:
+                write_file.write("\nPatch Job Status:\n")
+        for k, v in jobstatus_dict.iteritems():
+        
+            for a,  b in v.iteritems():
+                if a == 'serverid':
+                        server_id = b
+                if a == 'Patch_jobs':
+                    for jobid,  jobstatus in b.iteritems():
+                        completed_return = completed(int(jobid), int(server_id),  a)
+                        #if completed_return == 0:
+                        failed_return = failed(int(jobid), int(server_id),  a)
+                        #if failed_return == 0:
+                        progress_return = inprogress(int(jobid), int(server_id),  a)
+
+        print("\n\033[96mScheduled Reboot Job Status:\033[00m")
+        print('{0: <30}'.format('System Name') + '{0: <10}'.format('JobID') + '{0: >15}'.format('Job Status' ))
+        print('-----------------------------------------------------------------------------------------')
+        if args.output_file:
+            with open(args.output_file, "a") as write_file:
+                write_file.write("\n\nReboot Job Status:\n")
+        for k, v in jobstatus_dict.iteritems():
+        
+            for a,  b in v.iteritems():
+                if a == 'serverid':
+                        server_id = b
+                if a == 'Reboot_jobs':
+                    for jobid,  jobstatus in b.iteritems():
+                        completed_return = completed(int(jobid), int(server_id),  a)
+                        if completed_return == 0:
+                                failed_return = failed(int(jobid), int(server_id),  a)
+                        if failed_return == 0:
+                                progress_return = inprogress(int(jobid), int(server_id),  a)
+
+        print("\n\033[96mAuto Reboot (kernel updates) Job Status:\033[00m")
+        print('{0: <30}'.format('System Name') + '{0: <10}'.format('JobID') + '{0: >15}'.format('Job Status' ))
+        print('-----------------------------------------------------------------------------------------')
+        if args.output_file:
+            with open(args.output_file, "a") as write_file:
+                write_file.write("\n\nauto Reboot Job Status:\n")
+        for k, v in jobstatus_dict.iteritems():
+        
+            for a,  b in v.iteritems():
+                if a == 'serverid':
+                        server_id = b
+                if a == 'needReboot_jobs':
+                    for jobid,  jobstatus in b.iteritems():
+                        completed_return = completed(int(jobid), int(server_id),  a)
+                        if completed_return == 0:
+                                failed_return = failed(int(jobid), int(server_id),  a)
+                        if failed_return == 0:
+                                progress_return = inprogress(int(jobid), int(server_id),  a)
+
+        if args.output_file:
+            print("You can find the job status log in {}".format(args.output_file))
+        
+        time.sleep(5)
+
+if __name__ == '__main__':
+    try:
+        with open(args.jsonfile, "r") as r_file:
+            jobstatus_dict = json.load(r_file)
+
+        copy_jobstatus_dict = deepcopy(jobstatus_dict)
+        main_loop()
+    except KeyboardInterrupt:
+        session_client.auth.logout(session_key)
+        print >> sys.stderr, '\nExiting by user request.\n'
+        sys.exit(0)
 
 
 
