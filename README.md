@@ -6,6 +6,14 @@ The idea is to provide a python script using spacewalk api to patch all systems 
 The python script will be triggered through crontab on suse manager host at a given point in time.
 
 __Updates__:
+update_ubuntu_systemsByGroupWithRebootV2.py is a script to be used for "upgrade" ubuntu active systems of a given group with upgradable packages. This is a new script and could be extended to fit usage for only update certain linux distro type e.g. centos, ubuntu, fedora etc.
+
+__NEW__: commandline arguments "-r" or "-no-r" are required argument now. Please provide this argument for either you want a reboot -r or not -no-r.
+If you want a reboot -r then you also have to give the argument -sr '15:30 20-09-2020' to schedule the reboot after package upgrade job start time which is in turn specified by using e.g. -o 2 for "in 2 hours".
+
+Usage:
+```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -os UBuntu -r -sr '15:30 20-09-2020'```
+
 updatesystemsByGroupWithRebootV2.py is a script to be used for "upgrade" active systems of a given group with upgradable packages. It is needed mainly for upgrade linux distro which don't provide errata information e.g. ubuntu.
 
 Usage:
