@@ -15,12 +15,14 @@ reboot_parser = argparse.ArgumentParser()
 #parser.add_argument("-v", "--verbosity", action="count", default=0)
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This scripts schedules patch deployment jobs for given group's systems' in given hours from now on. A reboot will be scheduled as well. 
-Sample command:
-              python updatesystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -o 2  \n \
-              python updatesystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -sr 15:30 20-04-2020  \n \
-              python updatesystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -r true  \n \
-              python updatesystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -o 1 -sr 15:30 20-04-2020 -r true  \n \
+Sample command: \
+patch active systems from group in 2 hours from now, no-reboot, for ubuntu systems only. \
+              python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -no-r -os ubuntu \n \
+
+patch active systems from group in 2 hours from now, with reboot at specified date time, for ubuntu systems only.\
+              python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -os ubuntu -r -sr '15:30 20-09-2020'  \n \
 Check Job status of the system. ''')) 
+
 parser.add_argument("-s", "--server", help="Enter your suse manager host address e.g. myserver.abd.domain",  default='localhost',  required=True)
 parser.add_argument("-u", "--username", help="Enter your suse manager loginid e.g. admin ", default='admin',  required=True)
 parser.add_argument('-p', action=Password, nargs='?', dest='password', help='Enter your password',  required=True)
