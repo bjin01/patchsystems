@@ -12,7 +12,11 @@ __NEW:__ commandline arguments "-r" or "-no-r" are required argument now. Please
 If you want a reboot -r then you also have to give the argument -sr '15:30 20-09-2020' to schedule the reboot after package upgrade job start time which is in turn specified by using e.g. -o 2 for "in 2 hours".
 
 __Usage:__
-```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -os UBuntu -r -sr '15:30 20-09-2020'```
+patch active systems from group in 2 hours from now, no-reboot, for ubuntu systems only.\
+    ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -no-r -os ubuntu ```\
+
+patch active systems from group in 2 hours from now, with reboot at specified date time, for ubuntu systems only.\
+    ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -os ubuntu -r -sr '15:30 20-09-2020' ```
 
 **updatesystemsByGroupWithRebootV2.py** is a script to be used for "upgrade" active systems of a given group with upgradable packages. It is needed mainly for upgrade linux distro which don't provide errata information e.g. ubuntu.
 
