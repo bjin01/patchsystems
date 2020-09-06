@@ -1,26 +1,26 @@
 # SUSE Manager - patch systems (SLES, RHEL, CentOS, Ubuntu) automation
 # xmlrpc api python script: patch all systems of a group
 
-The idea is to provide a python script using spacewalk api to patch all systems within a given group and within an maintanance window of around three hours with system reboots.
+The idea is to provide a python script using spacewalk/uyuni/suse-manager api to patch all active systems within a given group. A reboot can also specified.
 
-The python script will be triggered through crontab on suse manager host at a given point in time.
+The python script could be triggered through crontab on suse manager host at a given point in time.
 
 ## __Updates:__
-**update_ubuntu_systemsByGroupWithRebootV2.py** is a script to be used for "upgrade" ubuntu active systems of a given group with upgradable packages. This is a new script and could be extended to fit usage for only update certain linux distro type e.g. centos, ubuntu, fedora etc.
+**update_ubuntu_systemsByGroupWithRebootV2.py** is a script to be used for "upgrade" ubuntu active systems of a given group with upgradable packages. This is a new script and could be extended to fit usage for only update certain linux distro type which doesn't provide patch errata e.g. centos, ubuntu, fedora etc.
 
 __NEW:__ commandline arguments "-r" or "-no-r" are required argument now. Please provide this argument for either you want a reboot -r or not -no-r.
 If you want a reboot -r then you also have to give the argument -sr '15:30 20-09-2020' to schedule the reboot after package upgrade job start time which is in turn specified by using e.g. -o 2 for "in 2 hours".
 
 __Usage:__
 patch active systems from group in 2 hours from now, no-reboot, for ubuntu systems only.\
-    ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -no-r -os ubuntu ```\
+    ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -no-r -os ubuntu ```
 
 patch active systems from group in 2 hours from now, with reboot at specified date time, for ubuntu systems only.\
     ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -os ubuntu -r -sr '15:30 20-09-2020' ```
 
 **updatesystemsByGroupWithRebootV2.py** is a script to be used for "upgrade" active systems of a given group with upgradable packages. It is needed mainly for upgrade linux distro which don't provide errata information e.g. ubuntu.
 
-__Usage:__
+__Usage:__\
 ```python updatesystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p password -g test2 -o 1 -sr '15:30 20-09-2020' -r true```
 
 
@@ -37,9 +37,9 @@ The patchsystemsByGroupWithRebootV2.py will check followings:
 
 
 __Recent Enhancements:__
-1. cancelAllActions.py can be used to delete all action id which was created by the patchsystemsByGroupWithRebootV2.py script. 
+1. cancelAllActions.py can be used to delete all action id which was created by the patchsystemsByGroupWithRebootV2.py script.\
 `python cancelAllActions.py -s bjsuma.bo2go.home -u bjin -p suse1234 -f ./joblist.json`
-2. jobstatus.py shows the job status of the recently created jobs into terminal and optionally into given output file.
+2. jobstatus.py shows the job status of the recently created jobs into terminal and optionally into given output file.\
 `python jobstatus.py -s bjsuma.bo2go.home -u bjin -p suse1234 -f ./joblist.json -o /var/log/jobstatus_list.log`
 
 3. a new feature has been added (June 2020)
