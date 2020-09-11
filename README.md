@@ -8,12 +8,18 @@ The python script could be triggered through crontab on suse manager host at a g
 ## __Updates:__
 **update_ubuntu_systemsByGroupWithRebootV2.py** is a script to be used for "upgrade" ubuntu active systems of a given group with upgradable packages. This is a new script and could be extended to fit usage for only update certain linux distro type which doesn't provide patch errata e.g. centos, ubuntu, fedora etc.
 
-__NEW:__ commandline arguments "-r" or "-no-r" are required argument now. Please provide this argument for either you want a reboot -r or not -no-r.
-If you want a reboot -r then you also have to give the argument -sr '15:30 20-09-2020' to schedule the reboot after package upgrade job start time which is in turn specified by using e.g. -o 2 for "in 2 hours".
+__NEW:__ commandline arguments ```-r``` __or__ ```-no-r``` are required arguments now. Please provide this argument for either you want a reboot -r or not -no-r.
+If you want a reboot ```-r``` then \
+* if you don't specify -sr then the reboot job will be created one hour later upon scheduled update job. \
+E.g. if update job is scheduled for ```-o 2``` in two hours from now then the reboot job will be created in 3 hours (2 + 1) from now.
+* You could also provide a schedule for reboot using -sr '15:30 20-09-2020' to fix the exact reboot time after package upgrade.
 
 __Usage:__
 patch active systems from group in 2 hours from now, no-reboot, for ubuntu systems only.\
     ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -no-r -os ubuntu ```
+
+patch active systems from group in 2 hours from now, --reboot yes one hour after scheduled upgrade job, for ubuntu systems only.\
+    ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -r -os ubuntu ```
 
 patch active systems from group in 2 hours from now, with reboot at specified date time, for ubuntu systems only.\
     ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -os ubuntu -r -sr '15:30 20-09-2020' ```

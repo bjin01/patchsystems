@@ -46,34 +46,10 @@ MANAGER_PASSWORD = args.password
 
 #This is a new reboot request to allow reboot in given hours OR given exact time schedule.
 #But if both params provide than we exit as this can not be handled at same time.
-""" if args.schedule-reboot and args.in_hours:
-    print("You can not provide --in_hours and --schedule-reboot at the same command. It is either or.")
-    sys.exit(1) """
+
 
 session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
 session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
-
-if args.in_hours:
-    check_install_time = datetime.now() + timedelta(hours=int(args.in_hours))
-else:
-    check_install_time = datetime.now()
-if args.schedule_reboot:
-    check_schedule_reboot_time = datetime.strptime(args.schedule_reboot, "%H:%M %d-%m-%Y")
-else:
-    check_schedule_reboot_time = datetime.now() + timedelta(minutes=10)
-
-
-if args.reboot == True:
-    if check_install_time and check_schedule_reboot_time:
-        if check_schedule_reboot_time <= check_install_time:
-            print("Error: Your desired reboot schedule time happens earlier than your desired install time. That is not a good idea.")
-            print("Please define a proper reboot time after scheduled update time. e.g. -sr '15:30 20-04-2020'")
-            sys.exit(1)
-        elif check_schedule_reboot_time <= datetime.now():
-            print("Error: Your desired reboot schedule time happens earlier than current time. That is not a good idea.")
-            sys.exit(1)
-
-
 
 if args.in_hours:
     nowlater = datetime.now() + timedelta(hours=int(args.in_hours))
