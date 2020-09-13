@@ -38,14 +38,14 @@ This case: all active systems of given group will be patched now but without reb
 
 
 ## __Commandline sample:__
-`python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p password -g "testgroup" -o 2 -r`
+`python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p password -g "testgroup" -o 2 -r true`
 
 The patchsystemsByGroupWithRebootV2.py will check followings:
 1. Is the given group available?
 2. Are the systems within group active? Inactive systems will be left out from further processing.
 3. Create patch apply jobs for the affected systems of the systemgroup.
 4. -o ("--in_hours") parameter is giving the number of hours from now on the jobs should be scheduled for.  
-5. __system reboot: with -r parameter all active systems will also get a reboot job scheduled. This parameter is optional. The reboot happens one hour after the start time of patch jobs. So if your patch job is about to start in 2 hours the reboot job will be scheduled to start in 3 hours from the time when this script got executed.__
+5. __system reboot: with ```-r true``` parameter all active systems will also get a reboot job scheduled. This parameter is optional. The reboot happens one hour after the start time of patch jobs. So if your patch job is about to start in 2 hours the reboot job will be scheduled to start in 3 hours from the time when this script got executed.__
 6. This script will also generate a joblist.json file into the current working directory and stores the action id of the jobs for later status queries.
 
 
