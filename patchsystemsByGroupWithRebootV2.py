@@ -26,7 +26,7 @@ parser.add_argument('-p', action=Password, nargs='?', dest='password', help='Ent
 parser.add_argument("-g", "--group_name", help="Enter a valid groupname. e.g. DEV-SLES12SP3 ",  required=True)
 parser.add_argument("-o", "--in_hours", help="in how many hours should the job be started. e.g. 2 ",  required=False)
 parser.add_argument("-sr", "--schedule_reboot", help="when it should reboot in format 15:30 20-04-1970",  required=False)
-parser.add_argument("-r", "--reboot", help="if this optional argument is provided then a reboot jobs schedules for one hour later then patch jobs will be scheduled as well.", required=False)
+parser.add_argument("-r", "--reboot", help="if this optional argument is provided then a reboot jobs schedules for one hour later then patch jobs will be scheduled as well.", default=False, required=False)
 args = parser.parse_args()
 
 MANAGER_URL = "http://"+ args.server+"/rpc/api"
@@ -46,10 +46,14 @@ if args.in_hours:
     check_install_time = datetime.now() + timedelta(hours=int(args.in_hours))
 else:
     check_install_time = datetime.now()
+
 if args.schedule_reboot:
+    
     check_schedule_reboot_time = datetime.strptime(args.schedule_reboot, "%H:%M %d-%m-%Y")
+elif args.reboot:
+        check_schedule_reboot_time = datetime.now() + timedelta(hours=int(args.in_hours)+1)
 else:
-    check_schedule_reboot_time = datetime.now() + timedelta(minutes=10)
+    check_schedule_reboot_time = check_install_time + timedelta(hours=int(1))
 
 if check_install_time and check_schedule_reboot_time:
     if check_schedule_reboot_time <= check_install_time:
@@ -82,13 +86,21 @@ def scheduleReboot(serverid,  servername):
     elif args.schedule_reboot and args.in_hours :
         reboottime = datetime.strptime(args.schedule_reboot, "%H:%M %d-%m-%Y")
     else:
-        reboottime = datetime.now() + timedelta(minutes=10)
+        reboottime = datetime.now() + timedelta(hours=int(1))
 
     earliest_occurrence_reboot = xmlrpclib.DateTime(reboottime)
     reboot_jobid = session_client.system.scheduleReboot(session_key, serverid,  earliest_occurrence_reboot)
-    jobsdict[servername]['Reboot_jobs']  = {}
-    jobsdict[servername]['serverid'] = serverid
-    jobsdict[servername]['Reboot_jobs'][reboot_jobid] = 'pending'
+    try: 
+        if reboot_jobid:
+            system_name = session_client.system.getName(session_key, serverid)
+            print("Reboot Job ID %s for %s %s has been created" %(str(reboot_jobid),  (str(serverid)), system_name['name']))
+            jobsdict[servername]['Reboot_jobs']  = {}
+            jobsdict[servername]['serverid'] = serverid
+            jobsdict[servername]['Reboot_jobs'][reboot_jobid] = 'pending'
+
+    except NameError:
+        print("No reboot job created.")
+        sys.exit(1)
     
 def json_write(mydict):
         with open("joblist.json", "w") as write_file:
@@ -136,7 +148,7 @@ if args.group_name:
         for s in system_actionid: 
             jobsdict[system_name['name']]['Patch_jobs'][s] =  'pending'
         print("Job ID %s for %s %s has been created" %(str(system_actionid),  (str(e)), system_name['name']))
-        if args.reboot == "true":
+        if args.reboot:
             scheduleReboot(e,  system_name['name'])
             
                 
