@@ -62,9 +62,8 @@ __Recent Enhancements:__
    
 
 ## future improvments:
-1. add RHEL package install support
-2. Intensive testing for reboot schedule is needed if you want to deploy patches to several hundreds systems.
-3. Add salt grains to indicate staging environment
+1. Intensive testing for reboot schedule is needed if you want to deploy patches to several hundreds systems.
+2. Add salt grains to indicate staging environment
 
 ## monitoring job status
 __jobstatus.py__ shows status from jobs which had been created by patchsystemsByGroupWithRebootV2.py.
