@@ -27,7 +27,14 @@ patch active systems from group in 2 hours from now, with reboot at specified da
 **updatesystemsByGroupWithRebootV2.py** is a script to be used for "upgrade" active systems of a given group with upgradable packages. It is needed mainly for upgrade linux distro which don't provide errata information e.g. ubuntu.
 
 __Usage:__\
+Thise case: all active systems of given group will be patched in one hour from now and rebooted as given schedule.
 ```python updatesystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p password -g test2 -o 1 -sr '15:30 20-09-2020' -r true```
+
+This case: all active systems of given group will be patched now and rebooted one hour later. 
+```python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g caasp -r true```
+
+This case: all active systems of given group will be patched now but without reboot. 
+```python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g caasp```
 
 
 ## __Commandline sample:__

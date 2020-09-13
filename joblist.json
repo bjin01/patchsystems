@@ -1,8 +1,20 @@
 {
-    "myutu20.bo2go.home": {
-        "serverid": 1000010170, 
+    "caasp04.bo2go.home": {
+        "serverid": 1000010176, 
         "Patch_jobs": {
-            "10488": "pending"
+            "10557": "pending"
+        }
+    }, 
+    "caasp03.bo2go.home": {
+        "serverid": 1000010174, 
+        "Patch_jobs": {
+            "10555": "pending"
+        }
+    }, 
+    "caasp05.bo2go.home": {
+        "serverid": 1000010175, 
+        "Patch_jobs": {
+            "10556": "pending"
         }
     }
 }

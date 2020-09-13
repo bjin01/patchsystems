@@ -51,6 +51,8 @@ if args.schedule_reboot:
     
     check_schedule_reboot_time = datetime.strptime(args.schedule_reboot, "%H:%M %d-%m-%Y")
 elif args.reboot:
+        if not args.in_hours:
+            args.in_hours = 0
         check_schedule_reboot_time = datetime.now() + timedelta(hours=int(args.in_hours)+1)
 else:
     check_schedule_reboot_time = check_install_time + timedelta(hours=int(1))
