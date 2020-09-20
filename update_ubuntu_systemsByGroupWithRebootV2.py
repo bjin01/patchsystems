@@ -34,8 +34,8 @@ parser.add_argument("-sr", "--schedule_reboot", help="when it should reboot in f
 parser.add_argument("-os", "--os_type", help="you can specify if this is e.g. -os utuntu ", required=False)
 
 reboot_parser = parser.add_mutually_exclusive_group(required=True)
-reboot_parser.add_argument("-r", '--reboot', dest='reboot', action='store_true')
-reboot_parser.add_argument("-no-r", '--no-reboot', dest='reboot', action='store_false')
+reboot_parser.add_argument("-r", '--reboot', help="either -r or -no-r must be specified to decide reboot or no-reboot.", dest='reboot', action='store_true')
+reboot_parser.add_argument("-no-r", '--no-reboot', help="either -r or -no-r must be specified to decide reboot or no-reboot.", dest='reboot', action='store_false')
 parser.set_defaults(reboot=False)
 args = parser.parse_args()
 
@@ -52,9 +52,33 @@ session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
 session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
 
 if args.in_hours:
+    check_install_time = datetime.now() + timedelta(hours=int(args.in_hours))
+else:
+    check_install_time = datetime.now()
+
+if args.schedule_reboot:
+    
+    check_schedule_reboot_time = datetime.strptime(args.schedule_reboot, "%H:%M %d-%m-%Y")
+elif args.reboot == True:
+        if not args.in_hours:
+            args.in_hours = 0
+        check_schedule_reboot_time = datetime.now() + timedelta(hours=int(args.in_hours)+1)
+else:
+    check_schedule_reboot_time = check_install_time + timedelta(hours=int(1))
+
+if check_install_time and check_schedule_reboot_time:
+    if check_schedule_reboot_time <= check_install_time:
+        print("Error: Your desired reboot schedule time happens earlier than your desired install time. That is not a good idea.")
+        sys.exit(1)
+    elif check_schedule_reboot_time <= datetime.now():
+        print("Error: Your desired reboot schedule time happens earlier than current time. That is not a good idea.")
+        sys.exit(1)
+
+if args.in_hours:
     nowlater = datetime.now() + timedelta(hours=int(args.in_hours))
 else:
     nowlater = datetime.now()
+
 earliest_occurrence = xmlrpclib.DateTime(nowlater)
 allgroups = session_client.systemgroup.listAllGroups(session_key)
 
@@ -90,10 +114,10 @@ def scheduleReboot(serverid,  servername):
     
     
 def json_write(mydict):
-        with open("joblist.json", "w") as write_file:
+        with open("joblist_updates.json", "w") as write_file:
             json.dump(mydict, write_file,  indent=4)
 
-def update_ubuntu(session_key, e, system_updatelist, earliest_occurrence):
+def update_os(session_key, e, system_updatelist, earliest_occurrence):
     updatelist = session_client.system.listLatestUpgradablePackages(session_key, e)
     if not updatelist:
         system_name = session_client.system.getName(session_key, e)
@@ -118,6 +142,28 @@ def update_ubuntu(session_key, e, system_updatelist, earliest_occurrence):
         print("No package to update.")   
         sys.exit(0)
 
+def detect_os_type(sessionkey, e, ostype):    
+    try:
+        system_products = session_client.system.getInstalledProducts(session_key, e)
+    except:
+        print("\tFatal error. getInstalledProducts failed. Check if the system %s has Installed Products" %e)
+    if system_products:
+        for a in system_products:
+            if ostype in a['friendlyName'].lower():
+                os_found = True
+            
+            try: os_found
+            except NameError:
+                print("No %s system found." %os_found)
+                sys.exit(1)
+            else:
+                if os_found:
+                    update_os(session_key, e, system_updatelist, earliest_occurrence)
+    else:
+        print("\tFatal error. getInstalledProducts failed. Check if the system %s has Installed Products" %e)
+        
+        
+
 if args.group_name:
     grpfound = 'false'
     for a in allgroups:
@@ -140,33 +186,14 @@ if args.group_name:
     
     for e in activesystemlist:
         system_updatelist = []
-
-        if args.os_type and 'ubuntu' in args.os_type.lower():
-            system_products = session_client.system.getInstalledProducts(session_key, e)
-            if system_products:
-                for a in system_products:
-                    if "ubuntu" in a['friendlyName'].lower():
-                        ubuntu = True
-            
-            try: ubuntu
-            except NameError:
-                print("No ubuntu system found.")
-                sys.exit(1)
-            else:
-                if ubuntu:
-                    update_ubuntu(session_key, e, system_updatelist, earliest_occurrence)
+        if args.os_type and 'ubuntu' == args.os_type.lower():
+            ostype = 'ubuntu'
+            detect_os_type(session_key, e, ostype)
         else: 
-            print("You did not specify -os for a os type e.g. -os ubuntu")
+            print("You did not specify -os for a os type e.g. -os ubuntu or the type you entered is wrong.")
             sys.exit(1)
-                
-        """ except:
-            error1 = 1
-            system_name = session_client.system.getName(session_key, e)
-            print("uups something went wrong. We could not create scheduleApplyErrata for:\t %s." %(system_name['name']))
-            print("one possible reason is the targeted systems already have pending patch and reboot jobs scheduled.") """
 
-if error1 != 1:
-    json_write(jobsdict)
+json_write(jobsdict)
 session_client.auth.logout(session_key)
 
 

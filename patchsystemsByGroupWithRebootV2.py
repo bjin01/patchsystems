@@ -11,22 +11,32 @@ class Password(argparse.Action):
         setattr(namespace, self.dest, values)
 
 parser = argparse.ArgumentParser()
+reboot_parser = argparse.ArgumentParser()
 #parser.add_argument("-v", "--verbosity", action="count", default=0)
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This scripts schedules patch deployment jobs for given group's systems' in given hours from now on. A reboot will be scheduled as well. 
 Sample command:
-              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -o 2  \n \
-              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -sr 15:30 20-04-2020  \n \
-              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -r true  \n \
-              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -o 1 -sr 15:30 20-04-2020 -r true  \n \
+              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -o 2 -r \n \
+              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -o 24 -sr 15:30 20-04-2020 -r \n \
+              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -no-r  \n \
+              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup -o 1 -sr 15:30 20-04-2020 -r  \n \
 Check Job status of the system. ''')) 
 parser.add_argument("-s", "--server", help="Enter your suse manager host address e.g. myserver.abd.domain",  default='localhost',  required=True)
 parser.add_argument("-u", "--username", help="Enter your suse manager loginid e.g. admin ", default='admin',  required=True)
 parser.add_argument('-p', action=Password, nargs='?', dest='password', help='Enter your password',  required=True)
 parser.add_argument("-g", "--group_name", help="Enter a valid groupname. e.g. DEV-SLES12SP3 ",  required=True)
-parser.add_argument("-o", "--in_hours", help="in how many hours should the job be started. e.g. 2 ",  required=False)
-parser.add_argument("-sr", "--schedule_reboot", help="when it should reboot in format 15:30 20-04-1970",  required=False)
-parser.add_argument("-r", "--reboot", help="if this optional argument is provided then a reboot jobs schedules for one hour later then patch jobs will be scheduled as well.", default=False, required=False)
+parser.add_argument("-o", "--in_hours", help="in how many hours should the job be started. e.g. 2, \
+    if -o is not specified then the job will be created for now",  required=False)
+parser.add_argument("-sr", "--schedule_reboot", help="specify exact reboot time in format of 15:30 20-04-1970 \
+    additionally you have to use -r to indicate a reboot is desired.",  required=False)
+#parser.add_argument("-r", "--reboot", help="if this optional argument is provided then a reboot jobs schedules for \
+#    one hour later then patch jobs will be scheduled as well.", default=False, required=False)
+
+reboot_parser = parser.add_mutually_exclusive_group(required=True)
+reboot_parser.add_argument("-r", '--reboot', help="either -r or -no-r must be specified to decide reboot or no-reboot.", dest='reboot', action='store_true')
+reboot_parser.add_argument("-no-r", '--no-reboot', help="either -r or -no-r must be specified to decide reboot or no-reboot.", dest='reboot', action='store_false')
+parser.set_defaults(reboot=False)
+
 args = parser.parse_args()
 
 MANAGER_URL = "http://"+ args.server+"/rpc/api"
@@ -50,7 +60,7 @@ else:
 if args.schedule_reboot:
     
     check_schedule_reboot_time = datetime.strptime(args.schedule_reboot, "%H:%M %d-%m-%Y")
-elif args.reboot:
+elif args.reboot == True:
         if not args.in_hours:
             args.in_hours = 0
         check_schedule_reboot_time = datetime.now() + timedelta(hours=int(args.in_hours)+1)
@@ -105,7 +115,7 @@ def scheduleReboot(serverid,  servername):
         sys.exit(1)
     
 def json_write(mydict):
-        with open("joblist.json", "w") as write_file:
+        with open("joblist_patches.json", "w") as write_file:
             json.dump(mydict, write_file,  indent=4)
 
 if args.group_name:
@@ -139,19 +149,28 @@ if args.group_name:
         for s in erratalist:    
             system_erratalist.append(s['id'])
             
-        # try:
-                
-        system_actionid = session_client.system.scheduleApplyErrata(session_key, e,  system_erratalist,  earliest_occurrence)
+        try:
+            system_actionid = session_client.system.scheduleApplyErrata(session_key, e,  system_erratalist,  earliest_occurrence)
+        except:
+            system_name = session_client.system.getName(session_key, e)
+            print("\tCreating patch Job for %s failed. Maybe another job for this system is already scheduled." %(system_name['name']))
+            continue
+
+
         del system_erratalist
         system_name = session_client.system.getName(session_key, e)
         jobsdict[system_name['name']]={}
         jobsdict[system_name['name']]['Patch_jobs']  = {}
         jobsdict[system_name['name']]['serverid']= e
+
+        #try:
         for s in system_actionid: 
             jobsdict[system_name['name']]['Patch_jobs'][s] =  'pending'
-        print("Job ID %s for %s %s has been created" %(str(system_actionid),  (str(e)), system_name['name']))
-        if args.reboot:
+            print("Job ID %s for %s %s has been created" %(str(system_actionid),  (str(e)), system_name['name']))
+        if args.reboot == True:
             scheduleReboot(e,  system_name['name'])
+        #except NameError:
+        #    print("aaaaa")
             
                 
         """ except:

@@ -1,0 +1,11 @@
+{
+    "myutu20.bo2go.home": {
+        "serverid": 1000010170, 
+        "Patch_jobs": {
+            "10646": "pending"
+        }, 
+        "Reboot_jobs": {
+            "10647": "pending"
+        }
+    }
+}
