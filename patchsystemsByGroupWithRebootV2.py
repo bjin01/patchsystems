@@ -156,6 +156,12 @@ if args.group_name:
             print("\tCreating patch Job for %s failed. Maybe another job for this system is already scheduled." %(system_name['name']))
             continue
 
+        """
+        system_actionid = session_client.system.scheduleApplyErrata(session_key, e,  system_erratalist,  earliest_occurrence)
+        system_name = session_client.system.getName(session_key, e)
+        print("\tCreating patch Job for %s failed. Maybe another job for this system is already scheduled." %(system_name['name']))
+        """        
+
 
         del system_erratalist
         system_name = session_client.system.getName(session_key, e)
