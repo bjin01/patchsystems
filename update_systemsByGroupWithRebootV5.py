@@ -148,6 +148,7 @@ def detect_os_type(sessionkey, e, ostype):
     except:
         print("\tFatal error. getInstalledProducts failed. Check if the system %s has Installed Products" %e)
     if system_products:
+        os_found = False
         for a in system_products:
             if ostype in a['friendlyName'].lower():
                 os_found = True
@@ -159,6 +160,8 @@ def detect_os_type(sessionkey, e, ostype):
             else:
                 if os_found:
                     update_os(session_key, e, system_updatelist, earliest_occurrence)
+                else:
+                    print("Not a system of type %s found\n" %ostype)
     else:
         print("\tFatal error. getInstalledProducts failed. Check if the system %s has Installed Products" %e)
         
@@ -189,8 +192,12 @@ if args.group_name:
         if args.os_type and 'ubuntu' == args.os_type.lower():
             ostype = 'ubuntu'
             detect_os_type(session_key, e, ostype)
+        elif args.os_type and 'centos' == args.os_type.lower():
+            ostype = 'centos'
+            detect_os_type(session_key, e, ostype)
+
         else: 
-            print("You did not specify -os for a os type e.g. -os ubuntu or the type you entered is wrong.")
+            print("You did not specify -os for a os type e.g. -os ubuntu or centos, or the type you entered is wrong.")
             sys.exit(1)
 
 json_write(jobsdict)

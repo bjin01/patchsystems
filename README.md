@@ -1,12 +1,12 @@
 # SUSE Manager - patch systems (SLES, RHEL, CentOS, Ubuntu) automation
 # xmlrpc api python script: patch all systems of a group
 
-The idea is to provide a python script using spacewalk/uyuni/suse-manager api to patch all active systems within a given group. A reboot can also specified.
+The idea is to provide a python script using uyuni/suse-manager (spacewalk as well but with few adaptions needed as we use "installed product" from SUSE Manager system detail field) api to patch all active systems within a given group. A reboot can also specified.
 
 The python script could be triggered through crontab on suse manager host at a given point in time.
 
 ## __Updates:__
-**update_ubuntu_systemsByGroupWithRebootV2.py** is a script to be used for "upgrade" ubuntu active systems of a given group with upgradable packages. This is a new script and could be extended to fit usage for only update certain linux distro type which doesn't provide patch errata e.g. centos, ubuntu, fedora etc.
+**update_systemsByGroupWithRebootV5.py** is a script to be used for "upgrade" ubuntu or centos active systems of a given group with upgradable packages. This is a new script and could be extended to fit usage for only update certain linux distro type which doesn't provide patch errata e.g. centos, ubuntu, fedora etc.
 
 __NEW:__ commandline arguments ```-r``` __or__ ```-no-r``` are required arguments now. Please provide this argument for either you want a reboot -r or not -no-r.
 If you want a reboot ```-r``` then \
@@ -16,29 +16,29 @@ E.g. if update job is scheduled for ```-o 2``` in two hours from now then the re
 
 __Usage:__
 patch active systems from group in 2 hours from now, no-reboot, for ubuntu systems only.\
-    ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -no-r -os ubuntu ```
+    ```python update_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -no-r -os ubuntu ```
 
 patch active systems from group in 2 hours from now, --reboot yes one hour after scheduled upgrade job, for ubuntu systems only.\
-    ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -r -os ubuntu ```
+    ```python update_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -r -os ubuntu ```
 
-patch active systems from group in 2 hours from now, with reboot at specified date time, for ubuntu systems only.\
-    ```python update_ubuntu_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -os ubuntu -r -sr '15:30 20-09-2020' ```
+patch active systems from group in 2 hours from now, with reboot at specified date time, for centos systems only.\
+    ```python update_systemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g test2 -o 2 -os centos -r -sr '15:30 20-09-2020' ```
 
-**updatesystemsByGroupWithRebootV2.py** is a script to be used for "upgrade" active systems of a given group with upgradable packages. It is needed mainly for upgrade linux distro which don't provide errata information e.g. ubuntu.
 
 __Usage:__\
-Thise case: all active systems of given group will be patched in one hour from now and rebooted as given schedule.
-```python updatesystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p password -g test2 -o 1 -sr '15:30 20-09-2020' -r true```
 
 This case: all active systems of given group will be patched now and rebooted one hour later. 
-```python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g caasp -r true```
+```python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g caasp -r```
 
 This case: all active systems of given group will be patched now but without reboot. 
 ```python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g caasp```
 
+This case: all active systems of given group will be patched in 2 hours and with reboot one hour after patch job start. 
+```python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g caasp -o 2 -r```
+
 
 ## __Commandline sample:__
-`python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p password -g "testgroup" -o 2 -r true`
+`python patchsystemsByGroupWithRebootV2.py -s bjsuma.bo2go.home -u bjin -p password -g "testgroup" -o 2 -r`
 
 The patchsystemsByGroupWithRebootV2.py will check followings:
 1. Is the given group available?

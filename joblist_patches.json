@@ -1,1 +1,20 @@
-{}
+{
+    "caasp02.bo2go.home": {
+        "serverid": 1000010167, 
+        "Patch_jobs": {
+            "10672": "pending"
+        }, 
+        "Reboot_jobs": {
+            "10673": "pending"
+        }
+    }, 
+    "caasp01.bo2go.home": {
+        "serverid": 1000010173, 
+        "Patch_jobs": {
+            "10674": "pending"
+        }, 
+        "Reboot_jobs": {
+            "10675": "pending"
+        }
+    }
+}
