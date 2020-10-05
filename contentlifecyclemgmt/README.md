@@ -15,6 +15,9 @@ This helper script that can be used to:
 * Download the modules metadata file from any centos8 mirrors.
 e.g. ```http://mirror.inode.at/data/centos/8.2.2004/AppStream/x86_64/os/repodata/```
 
+Or find the yaml file on SUSE Manager host:
+```/var/spacewalk/rhn/modules/centos8-appstream-x86_64/29ca407bc5a6166ebf443c05da1dc642267b193fb5859f4b6a4c68550d1d40c0-modules.yaml```
+
 find a file like below, download it, extract it on your local system.
 ```
     29ca407bc5a6166ebf443c05da1dc642267b193fb5859f4b6a4c68550d1d40c0-modules.yaml.gz
