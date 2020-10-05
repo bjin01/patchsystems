@@ -1,1 +1,5 @@
 .vscode/
+contentlifecyclemgmt/centos*
+contentlifecyclemgmt/grep*
+contentlifecyclemgmt/perl-md*
+
