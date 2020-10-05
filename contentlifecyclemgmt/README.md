@@ -11,6 +11,16 @@ This helper script that can be used to:
 * delete clm project by provide the project label.
 * delete clm filters by provide the given raw metadata file in yaml.
 
+### Get centos 8 appstream repo metadata file:
+* Download the modules metadata file from any centos8 mirrors.
+e.g. ```http://mirror.inode.at/data/centos/8.2.2004/AppStream/x86_64/os/repodata/```
+
+find a file like below, download it, extract it on your local system.
+```
+    29ca407bc5a6166ebf443c05da1dc642267b193fb5859f4b6a4c68550d1d40c0-modules.yaml.gz
+```
+You will use this *-modules.yaml file as raw metadata file with the script as below.
+
 ### Sample usage:
 
 below creates filters parsed from given yaml file, create project and \
@@ -21,7 +31,9 @@ attach centos8 parent and child channels.
 ``` 
 
 below cli deletes the given project label
-``` python clm-channel.py -s bjsuma.bo2go.home -u bjin -p suse1234 -dp xxxx```
+``` 
+    python clm-channel.py -s bjsuma.bo2go.home -u bjin -p suse1234 -dp xxxx
+```
     
 below cli delete all filters that are found from the given module metadata file
 ``` 
@@ -60,4 +72,3 @@ optional arguments:
   -lf, --listfilters    list clm filters
   -df, --deletefilters  delete clm filters
   ```
-  
