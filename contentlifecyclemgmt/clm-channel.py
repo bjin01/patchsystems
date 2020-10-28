@@ -33,11 +33,23 @@ def parse_metadata(myfile):
                     already_exist = False
                     #need to do below verification as the metadata could have dupblicate \
                     # entries for module and streams
+                    namekey_extended = ""
                     for a, v in modules_dict.items():
                         if namekey in a and streamval in v:
                             already_exist = True
+                            break
+                        else:
+                            if namekey in a and streamval not in v:
+                                #print("special", namekey, streamval)
+                                namekey_extended = namekey + "@" + streamval
+                                already_exist = False
+                                break
+
                     if not already_exist:
-                        modules_dict[namekey] = streamval
+                        if namekey_extended:
+                            modules_dict[namekey_extended] = streamval
+                        else:
+                            modules_dict[namekey] = streamval
                     
 
     if len(modules_dict.keys()) != 0:
@@ -48,7 +60,7 @@ def parse_metadata(myfile):
         sys.exit(1)
 
 #below code checks if the filter is already created and return false or true
-def lookup_filter(session_key, filtername, delete_flag):
+def lookup_filter(session_key, value, delete_flag):
     try:
         filters = session_client.contentmanagement.listFilters(session_key)
         #print(filters)
@@ -56,12 +68,19 @@ def lookup_filter(session_key, filtername, delete_flag):
         print("listfilters went wrong.")
     found = False
     for a in filters:
-        if a['name'] == filtername:
+        #print("inside lookup_filter", a)
+        if delete_flag == 1 and a['name'] in value:
+            try:
+                print("Deleting filter: %s" %a['name'])
+                filters = session_client.contentmanagement.removeFilter(session_key, a['id'])
+            except:
+                print("delete filter went wrong. ID: %s" %a['id'])
+        #print(value, a['criteria']['value'])
+        """ if a['criteria']['value'] in value:
             if delete_flag == 0:
                 print("Existing filter found. %s" %filtername)
                 found = True
                 return found
-                
             if delete_flag == 1:
                 try:
                     print("Deleting filter: %s" %a['name'])
@@ -71,7 +90,7 @@ def lookup_filter(session_key, filtername, delete_flag):
                 found = True
                 return found        
         else:
-            found = False
+            found = False """
             
     return found
 
@@ -283,11 +302,20 @@ if args.import_custom_file:
     if len(modules_dict.keys()) != 0:
         print("module metadata found")
         for a, b in modules_dict.items():
-            filtername = "module-" + a.strip() + "-" + b.strip()
-            entitytype = "module"
-            rule = "allow"
-            value = a + ":" + b
-            criteria = {'field': 'module_stream', 'value': value, 'matcher': 'equals'}
+            if "@" in a:
+                a_new = a.split("@")
+                print("look for a_new %s" %a_new[0])
+                filtername = "module-" + a_new[0].strip() + "-" + b.strip()
+                entitytype = "module"
+                rule = "allow"
+                value = a_new[0].strip() + ":" + b
+                criteria = {'field': 'module_stream', 'value': value, 'matcher': 'equals'}
+            else:
+                filtername = "module-" + a.strip() + "-" + b.strip()
+                entitytype = "module"
+                rule = "allow"
+                value = a + ":" + b
+                criteria = {'field': 'module_stream', 'value': value, 'matcher': 'equals'}
             
             if args.deletefilters:
                 found = lookup_filter(session_key, filtername, 1)
@@ -335,16 +363,26 @@ if args.importfile:
     if len(modules_dict.keys()) != 0:
         print("module metadata found.")
         for a, b in modules_dict.items():
-            filtername = "module-" + a.strip() + "-" + b.strip()
-            entitytype = "module"
-            rule = "allow"
-            value = a + ":" + b
-            criteria = {'field': 'module_stream', 'value': value, 'matcher': 'equals'}
+            if "@" in a:
+                a_new = a.split("@")
+                print("look for a_new %s" %a_new[0])
+                filtername = "module-" + a_new[0].strip() + "-" + b.strip()
+                entitytype = "module"
+                rule = "allow"
+                value = a_new[0].strip() + ":" + b
+                criteria = {'field': 'module_stream', 'value': value, 'matcher': 'equals'}
+            else:
+                filtername = "module-" + a.strip() + "-" + b.strip()
+                entitytype = "module"
+                rule = "allow"
+                value = a + ":" + b
+                criteria = {'field': 'module_stream', 'value': value, 'matcher': 'equals'}
             
             if args.deletefilters:
                 found = lookup_filter(session_key, filtername, 1)
             else:
                 found = lookup_filter(session_key, filtername, 0)
+
             if not found and not args.deletefilters:
                 try:
                     ret_createfilter = session_client.contentmanagement.createFilter(session_key, \
@@ -358,45 +396,20 @@ if args.importfile:
             if not found and args.deletefilters:
                 print("attention: no filters to delete.")
 
-if args.importfile and args.clmname and not args.deletefilters:
-    timestemp = datetime.now()
-    description = "created by script at " + str(timestemp)
-    project_found = lookup_clmproject(session_key, args.clmname)
-    if not project_found and not args.deletefilters:
-        try:
-            ret_createproject = session_client.contentmanagement.createProject(session_key, \
-                                    args.clmname, args.clmname, description)
-            print("project created, ID: %s, name: %s" %(ret_createproject['id'], \
-                    ret_createproject['label']))
-        except:
-            print("Creating clm project failed.")
-        if len(filter_id_list) != 0:
-            sourceType = "software"
-            if args.parent_channel_label:
-                ret_channels = find_child_channels(session_key, args.parent_channel_label)
-                if ret_channels:
-                    print(ret_channels)
-                    for a in ret_channels:
-                        attache_project_source(session_key, ret_createproject['label'], sourceType, a)
-                    attache_filters(session_key, ret_createproject['label'], filter_id_list)
-            else:
-                print("no parent_channel_label provided.")
-    else:
-        print("project %s exist already." %args.clmname)
-else:
-    if args.importfile and not args.clmname and not args.deletefilters:
+    if args.importfile and args.clmname and not args.deletefilters:
         timestemp = datetime.now()
         description = "created by script at " + str(timestemp)
-        projectlabel = "streams"
-        projectname = "streams"
-        project_found = lookup_clmproject(session_key, projectlabel)
+        project_found = lookup_clmproject(session_key, args.clmname)
         if not project_found and not args.deletefilters:
             try:
                 ret_createproject = session_client.contentmanagement.createProject(session_key, \
-                                    projectlabel, projectname, description)
-                print("default project name created, ID: %s, name: %s" %(ret_createproject['id'], projectlabel))
+                                        args.clmname, args.clmname, description)
+                print("project created, ID: %s, name: %s" %(ret_createproject['id'], \
+                        ret_createproject['label']))
             except:
-                print("2 Creating clm project failed.")
+                print("Creating clm project failed.")
+            
+            print("lets see the filter_id_list %s" %filter_id_list)
             if len(filter_id_list) != 0:
                 sourceType = "software"
                 if args.parent_channel_label:
@@ -404,11 +417,38 @@ else:
                     if ret_channels:
                         print(ret_channels)
                         for a in ret_channels:
-                            attache_project_source(session_key, projectlabel, sourceType, a)
-                        attache_filters(session_key, projectlabel, filter_id_list)
+                            attache_project_source(session_key, ret_createproject['label'], sourceType, a)
+                        attache_filters(session_key, ret_createproject['label'], filter_id_list)
                 else:
                     print("no parent_channel_label provided.")
         else:
-            print("project %s exist already." %projectlabel)
+            print("project %s exist already." %args.clmname)
+    else:
+        if args.importfile and not args.clmname and not args.deletefilters:
+            timestemp = datetime.now()
+            description = "created by script at " + str(timestemp)
+            projectlabel = "streams"
+            projectname = "streams"
+            project_found = lookup_clmproject(session_key, projectlabel)
+            if not project_found and not args.deletefilters:
+                try:
+                    ret_createproject = session_client.contentmanagement.createProject(session_key, \
+                                        projectlabel, projectname, description)
+                    print("default project name created, ID: %s, name: %s" %(ret_createproject['id'], projectlabel))
+                except:
+                    print("2 Creating clm project failed.")
+                if len(filter_id_list) != 0:
+                    sourceType = "software"
+                    if args.parent_channel_label:
+                        ret_channels = find_child_channels(session_key, args.parent_channel_label)
+                        if ret_channels:
+                            print(ret_channels)
+                            for a in ret_channels:
+                                attache_project_source(session_key, projectlabel, sourceType, a)
+                            attache_filters(session_key, projectlabel, filter_id_list)
+                    else:
+                        print("no parent_channel_label provided.")
+            else:
+                print("project %s exist already." %projectlabel)
 
 
