@@ -6,7 +6,7 @@ into the given text file and send it by email to the given email address.
 
 ## usage:
 
-```python collect_systems_report-v1.py -s bjsuma.bo2go.home -u bjin -p suse1234 -d -f /tmp/test.txt -m bo.jin@jinbo01.com```
+```python collect_systems_report-v1.py -s bjsuma.bo2go.home -u bjin -p suse1234 -d -f /tmp/test.txt -m test@test.domain.com```
 
 ```# python collect_systems_report-v1.py --help
 usage: PROG [-h] -s SERVER -u USERNAME -p [PASSWORD] [-f FILEPATH]
