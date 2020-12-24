@@ -9,6 +9,7 @@ into the given text file and send it by email to the given email address.
 * can list system details which are relevant for the counting
 * write results into a given file
 * send the file content via email to desired recipient
+* if system is a physical then physical cpu sockets will be counted as well
 
 ## usage:
 
