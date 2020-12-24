@@ -22,13 +22,23 @@ def print_more_details(systemlist_final):
             print("\tversion: %s" %a['version'])
             print("\tarchitecture: %s" %a['cpu'])
 
+def getcpu(systemid):
+    try:
+        system_details = session_client.system.getCpu(session_key, systemid)
+        if system_details['socket_count'] is not None:
+            return system_details['socket_count']
+        else:
+            return 0
+    except:
+        print("Could not query cpu socket information from %s" %systemid)
+
 def write_datafile(fpath, systemlist_final):
     my_now = datetime.now()
     with open(fpath, 'w') as f:
         f.write("Monthly Audit of Linux servers - %s\n" %(my_now.strftime("%d/%m/%Y, %H:%M:%S")))
         f.write("Total: %s\n"% count_Total)
         f.write("Total VM: %s\n" % count_virtual)
-        f.write("Total bare-metal: %s\n" % count_physical)
+        f.write("Total bare-metal: %s \tTotal physical CPU Sockets %s\n" % (count_physical, count_physical_cpu_sockets))
         f.write("Total SLES: %s\n" % count_SLES)
         f.write("Total SLES_for_SAP: %s\n" % count_SLES_for_SAP)
         f.write("Total Expanded Support: %s\n" % count_RES)
@@ -46,11 +56,11 @@ def write_datafile(fpath, systemlist_final):
 def send_mail(to_email, fpath):
     try:
         check_output = subprocess.check_output(["mailx", "-V"])
-        print("check if mailx is available, version: %s" %check_output)
+        print("mailx programm is installed. %s" %check_output)
     except:
         print("mailx not found. Exit with error. 1")
         sys.exit(1)
-    from_email = "itadminunix@aduno-gruppe.ch" 
+    from_email = "test@test.domain.com" 
     subj = '"Monthly Audit of Linux servers"'
     cmd = "mailx " + "-r " + from_email + " " + "-s " + subj + " " + to_email + " " + "<" + fpath
     cmdoutput = subprocess.check_output([cmd], shell=True)
@@ -103,6 +113,7 @@ count_RES = 0
 count_RHEL = 0
 count_Centos = 0
 count_Total = 0
+count_physical_cpu_sockets = 0
 
 if len(systemslist) != 0:
 
@@ -113,13 +124,16 @@ if len(systemslist) != 0:
         systemdetails['name'] = i['name']
         try:
             system_details = session_client.system.getDetails(session_key, i['id'])
-            if system_details['virtualization'] != "":
+            if system_details.get('virtualization') is not None and system_details['virtualization'] != "":
                 systemdetails['virtualization'] = True
                 count_virtual += 1
 
             else:
                 systemdetails['virtualization'] = False
-                count_physical += 1      
+                count_physical += 1
+                cpusocket_number = getcpu(i['id'])
+                count_physical_cpu_sockets += cpusocket_number
+
         except:
             print("%s not found." % i['id'])
 
@@ -155,7 +169,7 @@ if len(systemslist) != 0:
     
     print("Total: %s" % count_Total)
     print("Total VM: %s" % count_virtual)
-    print("Total bare-metal: %s" % count_physical)
+    print("Total bare-metal: %s, \tTotal physical CPU Sockets %s" % (count_physical, count_physical_cpu_sockets))
     print("Total SLES: %s" % count_SLES)
     print("Total SLES_for_SAP: %s" % count_SLES_for_SAP)
     print("Total Expanded Support: %s" % count_RES)
@@ -168,10 +182,16 @@ else:
 if args.printdetails:
         print_more_details(systemlist_final)
 
-if args.filepath != "":
+if args.filepath:
     write_datafile(args.filepath, systemlist_final)
 
-if args.to_email != "" and args.filepath != "":
+if not args.filepath:
+    print("You have not provided a output file to which the results should be written into. This is not bad but just be aware of this feature.")
+
+if args.to_email and args.filepath:
     send_mail(args.to_email, args.filepath)
+
+if args.to_email and not args.filepath:
+    print("Hey, you have not provided the output file that content should be sent via email. Do this with -f filename")
 
 session_client.auth.logout(session_key)
