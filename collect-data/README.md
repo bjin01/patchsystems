@@ -9,6 +9,7 @@ into the given text file and send it by email to the given email address.
 * can list system details which are relevant for the counting
 * write results into a given file
 * send the file content via email to desired recipient
+* if system is a physical then physical cpu sockets will be counted as well
 
 ## usage:
 
@@ -41,10 +42,10 @@ optional arguments:
   
   ## Sample overview result:
   ```
-Monthly Audit of Linux servers - 19/12/2020, 13:08:00
-Total: 17
+Monthly Audit of Linux servers - 24/12/2020, 19:46:42
+Total: 18
 Total VM: 17
-Total bare-metal: 0
+Total bare-metal: 1     Total physical CPU Sockets 1
 Total SLES: 8
 Total SLES_for_SAP: 5
 Total Expanded Support: 2
