@@ -26,7 +26,7 @@ peripheral_sumas:
     password: testpasswd
     active: False
 ```
-The "active: True" or "active: False" helps to control which peripheral suse manager server is currently active you want to manage. If active is false then the respective peripheral suse manager server is excluded from the current management.
+The __"active: True"__ or __"active: False"__ helps to control which peripheral suse manager server is currently active you want to manage. If active is false then the respective peripheral suse manager server is excluded from the current management.
 
 __Run it:__
 ```python hubconnect.py```
