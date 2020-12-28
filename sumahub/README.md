@@ -12,8 +12,6 @@ __Run it:__
 __Sample Results:__
 ```
 # python hubconnect.py 
-Get data from [1000010000], but failed: ['Fault(-1): com.redhat.rhn.common.translation.TranslationException: Could not find translator for class java.lang.String to interface com.redhat.rhn.domain.user.User']
-It might be possible that the given peripheral SUMA host is not available.
 
 Peripheral SUMA Hostname: bjsuma.bo2go.home 1000010000:
 system list:
