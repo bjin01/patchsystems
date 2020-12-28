@@ -1,0 +1,19 @@
+hub: sumahub.bo2go.home
+hub_user: bjin01
+hub_password: suse1234
+
+peripheral_sumas:
+  suma1:
+    servername: bjsuma.bo2go.home
+    username: bjin
+    password: suse1234
+    active: True
+  
+  suma2:
+    servername: testserver
+    username: testuser
+    password: testpasswd
+    active: True
+
+
+
