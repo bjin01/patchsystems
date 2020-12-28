@@ -6,6 +6,28 @@ The user login and passwords for hub server and all peripheral suma servers, you
 
 This is a more "advanced - hello world" python script that shows how to talk to multiple suma servers using SUSE Manager Hub.
 
+__Config it:__
+First create a yaml config file using below parameters and place the file in the same directory as the python script.
+```
+hub: sumahub.bo2go.home
+hub_user: bjin01
+hub_password: suse1234
+
+peripheral_sumas:
+  suma1:
+    servername: bjsuma.bo2go.home
+    username: bjin
+    password: suse1234
+    active: True
+
+  suma2:
+    servername: testserver
+    username: testuser
+    password: testpasswd
+    active: False
+```
+The "active: True" or "active: False" helps to control which peripheral suse manager server is currently active you want to manage. If active is false then the respective peripheral suse manager server is excluded from the current management.
+
 __Run it:__
 ```python hubconnect.py```
 
