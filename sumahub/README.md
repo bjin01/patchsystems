@@ -6,10 +6,10 @@ The user login and passwords for hub server and all peripheral suma servers, you
 
 This is a more "advanced - hello world" python script that shows how to talk to multiple suma servers using SUSE Manager Hub.
 
-Run it:
+__Run it:
 ```python hubconnect.py```
 
-Sample Results:
+__Sample Results:
 ```
 # python hubconnect.py 
 Get data from [1000010000], but failed: ['Fault(-1): com.redhat.rhn.common.translation.TranslationException: Could not find translator for class java.lang.String to interface com.redhat.rhn.domain.user.User']
