@@ -152,9 +152,9 @@ if len(systemslist) != 0:
                             count_SLES += 1
                         if systemdetails['baseproduct'] == "SLES_SAP":
                             count_SLES_for_SAP += 1
-                        if systemdetails['baseproduct'] == "res":
+                        if "res" in systemdetails['baseproduct'].lower():
                             count_RES += 1
-                        if systemdetails['baseproduct'] == "Red Hat":
+                        if "rhel" in systemdetails['baseproduct'].lower():
                             count_RHEL += 1
                         if systemdetails['baseproduct'] == "centos":
                             count_Centos += 1
