@@ -1,0 +1,16 @@
+[
+    {
+        "caasp02.bo2go.home": {
+            "serverid": 1000010167, 
+            "Reboot_jobs": 11370, 
+            "time": "09/02/2021, 20:09:49"
+        }
+    }, 
+    {
+        "caasp01.bo2go.home": {
+            "serverid": 1000010173, 
+            "Reboot_jobs": 11371, 
+            "time": "09/02/2021, 20:09:49"
+        }
+    }
+]

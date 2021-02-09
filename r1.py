@@ -1,9 +1,16 @@
 #!/usr/bin/python
 import xmlrpclib,  argparse,  getpass,  textwrap,  json, sys
 import os
+import yaml
 from datetime import datetime,  timedelta
 from collections import defaultdict
 #from array import *
+
+def read_config(conf_file):
+    if os.path.isfile(conf_file):
+        with open(conf_file) as c_file:
+            parsed_yaml_file = yaml.load(c_file, Loader=yaml.FullLoader)
+        return parsed_yaml_file
 
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -16,19 +23,24 @@ parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This scripts schedules patch deployment jobs for given group's systems' in given hours from now on. A reboot will be scheduled as well. 
 Sample command:
-              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup
+              ./reboot.py -c sumaconf.yaml -f joblist_patches.json -o joblist_reboot.json
               ''')) 
-parser.add_argument("-s", "--server", help="Enter your suse manager host address e.g. myserver.abd.domain",  default='localhost',  required=True)
-parser.add_argument("-u", "--username", help="Enter your suse manager loginid e.g. admin ", default='admin',  required=True)
-parser.add_argument('-p', action=Password, nargs='?', dest='password', help='Enter your password',  required=True)
+parser.add_argument("-c", "--config", help="Enter your suse manager host login config file name", required=True)
 parser.add_argument("-f", "--file_name", help="Enter a valid job file name. e.g. myjoboutput.txt ",  required=True)
 parser.add_argument("-o", "--output_file", help="Enter a file name to store reboot job outputs. e.g. rebootjobs.txt ",  required=True)
 
 args = parser.parse_args()
 
-MANAGER_URL = "http://"+ args.server+"/rpc/api"
-MANAGER_LOGIN = args.username
-MANAGER_PASSWORD = args.password
+suma_conf = {}
+if args.config:
+    suma_conf = read_config(args.config)
+    
+    MANAGER_URL = "http://"+ suma_conf["server"] +"/rpc/api"
+    MANAGER_LOGIN = suma_conf["user"]
+    MANAGER_PASSWORD = suma_conf["password"]
+else:
+    print("No suma config file provided.")
+    sys.exit(1)
 
 
 session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
@@ -102,14 +114,14 @@ def schedule_reboot(serverid):
 def check_reboot_already(reboot_job_file, serverid):
     if os.path.isfile(reboot_job_file) and str(serverid) != "":
         reboot_data = read_jsonfile(reboot_job_file)
-        print("reboot_data %s" % reboot_data)
+        #print("reboot_data %s" % reboot_data)
         if len(reboot_data) != 0:
             for i in reboot_data:
                 for _, b in i.items():
                     if isinstance(b, dict):
-                        print("lets see b %s" % b)
+                        #print("lets see b %s" % b)
                         if b["serverid"] == serverid:
-                            print("match reboot serverid found")
+                            #print("match reboot serverid found")
                             return 1
                        
                          
@@ -126,14 +138,14 @@ if len(data) != 0:
     for a, b in data.items():
         if isinstance(b, dict):
             if str(b["serverid"]) != "" and str(b["Patch_jobs"]) != "":
-                print("%s: %s %s" %(b["serverid"], b["Patch_jobs"], b["time"]))
+                #print("%s: %s %s" %(b["serverid"], b["Patch_jobs"], b["time"]))
                 status = check_patch_status(b["serverid"], b["Patch_jobs"])
                 print("patch status: %s" % status)
                 if status == "completed":
                     if args.output_file:
-                        print("serverid to search for reboot or not %s" %b["serverid"])
+                        #print("serverid to search for reboot or not %s" %b["serverid"])
                         already_rebooted = check_reboot_already(args.output_file, b["serverid"])
-                        print("already_rebooted %s" % already_rebooted)
+                        #print("already_rebooted %s" % already_rebooted)
                         if already_rebooted == None or already_rebooted == 0:
                             jobsoutput = schedule_reboot(b["serverid"])
                             all_jobs.append(jobsoutput)

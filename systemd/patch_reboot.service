@@ -1,0 +1,5 @@
+[Unit]
+Description=Start patch_reboot.py to create reboot jobs in SUSE Manager
+
+[Service]
+ExecStart=/root/patch_job/r1.py -c /root/patch_job/sumaconf.yaml -f /root/patch_job/joblist_patches.json -o /root/patch_job/joblist_reboot.json

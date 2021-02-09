@@ -1,8 +1,16 @@
 #!/usr/bin/python
 import xmlrpclib,  argparse,  getpass,  textwrap,  json, sys
+import os
+import yaml
 from datetime import datetime,  timedelta
 from collections import defaultdict
 #from array import *
+
+def read_config(conf_file):
+    if os.path.isfile(conf_file):
+        with open(conf_file) as c_file:
+            parsed_yaml_file = yaml.load(c_file, Loader=yaml.FullLoader)
+        return parsed_yaml_file
 
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -15,18 +23,22 @@ parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This scripts schedules patch deployment jobs for given group's systems' in given hours from now on. A reboot will be scheduled as well. 
 Sample command:
-              python patchsystemsByGroupWithReboot.py -s bjsuma.bo2go.home -u bjin -p suse1234 -g testgroup
+              ./patch.py -c sumaconf.yaml -g testgroup
               ''')) 
-parser.add_argument("-s", "--server", help="Enter your suse manager host address e.g. myserver.abd.domain",  default='localhost',  required=True)
-parser.add_argument("-u", "--username", help="Enter your suse manager loginid e.g. admin ", default='admin',  required=True)
-parser.add_argument('-p', action=Password, nargs='?', dest='password', help='Enter your password',  required=True)
-parser.add_argument("-g", "--group_name", help="Enter a valid groupname. e.g. DEV-SLES12SP3 ",  required=True)
+parser.add_argument("-c", "--config", help="Enter your suse manager host login config file name", required=True)
+parser.add_argument("-g", "--group_name", help="Enter a valid groupname. e.g. DEV-SLES15SP2 ",  required=True)
 
 args = parser.parse_args()
-
-MANAGER_URL = "http://"+ args.server+"/rpc/api"
-MANAGER_LOGIN = args.username
-MANAGER_PASSWORD = args.password
+suma_conf = {}
+if args.config:
+    suma_conf = read_config(args.config)
+    
+    MANAGER_URL = "http://"+ suma_conf["server"] +"/rpc/api"
+    MANAGER_LOGIN = suma_conf["user"]
+    MANAGER_PASSWORD = suma_conf["password"]
+else:
+    print("No suma config file provided.")
+    sys.exit(1)
 
 
 session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
