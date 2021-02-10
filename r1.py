@@ -4,7 +4,7 @@ import os
 import yaml
 from datetime import datetime,  timedelta
 from collections import defaultdict
-#from array import *
+
 
 def read_config(conf_file):
     if os.path.isfile(conf_file):
@@ -46,7 +46,8 @@ else:
 session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
 session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
 
-nowlater = datetime.now() + timedelta(hours=int(1))
+#nowlater = datetime.now() + timedelta(hours=int(1))
+nowlater = datetime.now()
 earliest_occurrence = xmlrpclib.DateTime(nowlater)
 
 data = []
@@ -159,3 +160,5 @@ if len(all_jobs) != 0:
     else:
         print("No output file provided.")
         sys.exit(1)
+
+session_client.auth.logout(session_key)

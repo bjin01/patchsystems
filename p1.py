@@ -2,6 +2,7 @@
 import xmlrpclib,  argparse,  getpass,  textwrap,  json, sys
 import os
 import yaml
+import subprocess
 from datetime import datetime,  timedelta
 from collections import defaultdict
 #from array import *
@@ -11,6 +12,22 @@ def read_config(conf_file):
         with open(conf_file) as c_file:
             parsed_yaml_file = yaml.load(c_file, Loader=yaml.FullLoader)
         return parsed_yaml_file
+
+def start_systemd_timer():
+    cmd = '/bin/systemctl start patch_reboot.timer'
+    proc = subprocess.Popen(cmd, shell=True,stdout=subprocess.PIPE)
+    proc.communicate()
+
+def is_active_timer():
+        """Return True if timer is running"""
+        cmd = '/bin/systemctl status patch_reboot.timer'
+        proc = subprocess.Popen(cmd, shell=True,stdout=subprocess.PIPE)
+        stdout_list = proc.communicate()[0].split('\n')
+        for line in stdout_list:
+            if 'Active:' in line:
+                if '(waiting)' in line:
+                    return True
+        return False
 
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -113,6 +130,10 @@ if args.group_name:
 
 if error1 != 1:
     json_write(jobsdict)
+    start_systemd_timer()
+    started = is_active_timer()
+    if started is True:
+        print("patch_reboot.timer is started successfully.")
 session_client.auth.logout(session_key)
 
 
