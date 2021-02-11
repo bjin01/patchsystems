@@ -1,16 +1,25 @@
 # Patch __active__ systems of a group and reboot them based on patch job completion
 
-This solution has two scripts. One script is to schedule patch jobs for a given group. The second script is to schedule reboot of those systems based on patch job status.
+This solution has two scripts. One script is to schedule patch jobs for all active systems in a given group. The second script is to schedule reboot of those systems based on patch job status.
 
 p1.py - is triggering the patch job.
-r1.py - is to evaluate patch job status if completed then a reboot job will be scheduled.
+r1.py - evaluates the patch job status concurrently through a systemd service and timer. Once a patch job is completed a reboot job will be scheduled.
 
-The reboot will be triggered for all systems who's patch job has completed independant if a reboot is required or not.
+__If the patch job has failed no reboot job will be scheduled.__
+
+The reboot will be triggered for all systems who's patch job has completed independantly if a reboot is required or not.
 This approach is good for maintenance windows where systems need to be patched and rebooted.
 
-Only active systems of a given group will be targeted otherwise we have to many pending jobs waiting for nodes which are maybe offline for longer period.
+__Only active systems of a given group__ will be targeted otherwise we have to many pending jobs waiting for nodes which are maybe offline for longer period.
 
-Usage:
+Both scripts will write the job IDs into its output file.
+```
+joblist_patches.json
+joblist_reboot.json
+```
+The ```joblist_reboot.json``` is also used to detect if a reboot job has already been created as we don't want to create reboot jobs again for systems which already got a reboot job.
+
+### Usage:
 
 First the scripts (r1.py and p1.py) should be placed in a directory of your choice.
 The scripts will need a --config parameter to parse in the login information for calling SUSE Manager API. So create a config file in yaml format like below:
@@ -20,43 +29,48 @@ user: myuser
 password: 8klwis9
 ```
 Calling p1.py to patch:
-Assuming all files are placed in same directory and you run below script from this directory.
+Assuming all files are placed in same directory and you run below script from that directory.
 -c is for the configuration file with login information
 -g is the group name you want to patch
 
 ```
 cd ~/patch_jobs
-p1.py -c sumaconf.yaml -g caasp
+p1.py -c sumaconf.yaml -g mygroup
 ```
-The p1.py script will write the patch job ID's into a file called joblist_patches.json in the current directory.
+The p1.py script will write the patch job ID's into a file called ```joblist_patches.json``` in the current directory.
 
-The joblist_patches.json will be used in the next step for reboot script as input file.
+The ```joblist_patches.json``` will be used in the next step for reboot script as input file.
 
 Now we want to run the r1.py as reboot script to schedule reboot jobs in SUSE Manager. This should be a recurring task running every 10 minutes to evaluate the patch job status.
 
-For the recurring feature I choose to use systemd timer that starts a systemd service to execute the r1.py. So every 10 minutes the r1.py will be executed to see either the patch jobs are done and if a job is completed and a reboot job will be scheduled for the respective system.
+For the recurring feature I choose to use systemd timer that starts the systemd service to execute the r1.py. Every 10 minutes the r1.py will be executed to evaluate either the patch jobs are completed and a reboot job should be scheduled for the respective system.
 
-Now create a systemd service file and systemd timer file for p1.py
-You find the sample files in this repository systemd directory. Put these two files into /etc/systemd/system directory on SUSE Manager host.
-Then run:
+Now create a systemd service file and a systemd timer file for p1.py on SUSE Manager host.
+You find the sample files in the repository systemd directory. Put these two files into /etc/systemd/system directory on SUSE Manager host and run:
 ```
 systemctl daemon-reload
 ```
-Cautious: Do not enable the patch_reboot.service and patch_reboot.timer because the timer will be started by the p1.py at the end if patch jobs have been successfully created.
+__Cautious:__ Do not enable the *patch_reboot.service* and *patch_reboot.timer* because the timer will be started by the p1.py at the end if patch jobs have been  created successfully.
 
-The patch_reboot.timer is per default configured for every 10minutes to start patch_reboot.service which executes our r1.py to schedule reboots.
+The ```patch_reboot.timer``` in my example is configured for every 10 minutes to start ```patch_reboot.service``` which executes our r1.py to schedule reboots.
 
-r1.py can be used as following:
+r1.py can be started with following parameters:
+
 ```
 /root/patch_job/r1.py -c /root/patch_job/sumaconf.yaml -f /root/patch_job/joblist_patches.json -o /root/patch_job/joblist_reboot.json
 ```
--f - provide the file that contains the patch job information e.g. jobid etc. This file is auto-generated by p1.py when it scheduled patch jobs.
--o - provide a file name for the reboot job information. This file will be read in for comparison to check if a reboot has already been done or not. If not done yet and the patch job has finished successfully then a reboot job will be scheduled.
+-f - provide the file that contains the patch job information e.g. jobid etc. This file is auto-generated by p1.py when scheduled patch jobs have been created.
+-o - provide a output file name for the reboot job information. This file will be also read to verify if a reboot job has already been scheduled or not. If not and the patch job has finished successfully then a reboot job will be scheduled.
 
-Clean-up:
+### Clean-up:
 After each planned maintenance window and usage of p1.py and r1.py please don't forget to:
 1. stop patch_reboot.timer
-2. delete the job output files e.g. joblist_patches.json joblist_reboot.json
+2. delete the job output files e.g. ```joblist_patches.json joblist_reboot.json```
 
-If you forget to delete those job output files from previous maintenance windows then reboot jobs will not be created correctly!
+__If you forget to delete those job output files from previous maintenance windows then reboot jobs will not be created correctly!__
+
+### Troubleshooting:
+Use ```journalctl -f``` to watch the outputs of r1.py when it will be executed every 10 minutes.
+
+
 
