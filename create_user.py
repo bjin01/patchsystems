@@ -6,7 +6,6 @@ import argparse
 import getpass
 import textwrap
 import subprocess
-from datetime import datetime,  timedelta
 from xmlrpc.client import ServerProxy, Error
 
 def get_login(path):
@@ -27,9 +26,7 @@ def login_suma(login):
     MANAGER_PASSWORD = login['suma_password']
     SUMA = "http://" + login['suma_user'] + ":" + login['suma_password'] + "@" + login['suma_host'] + "/rpc/api"
     with ServerProxy(SUMA) as session_client:
-        print("%s %s %s" % (login['suma_host'], login['suma_user'], login['suma_password']))
         session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
-        print("sessionkey: %s" % session_key)
     return session_client, session_key
 
 def suma_logout(session, key):
@@ -112,7 +109,7 @@ def delete_users(ad_users, suma_users, session, key):
 
 def list_roles(session, key):
     role_list = session.user.listAssignableRoles(key)
-    print("user roles: %s" % role_list)
+    #print("user roles: %s" % role_list)
     return
 
 parser = argparse.ArgumentParser()
@@ -120,11 +117,13 @@ parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This script creates users from AD and delete users which does not exist anymore.
 Sample command:
-              python3 create_user.py -f suma_config.yaml \n \
+              python3 create_user.py -c ./suma_config.yaml -g susemanager -r admin \n \
+
+If pam users from the given AD group is missing those users will be deleted from SUMA automatically.
 '''))
 parser.add_argument("-c", "--config", help="Enter config file in yaml format that holds login.",  default='./suma_config.yaml',  required=True)
 parser.add_argument("-g", "--group", help="Enter AD group name.",  default='testgroup',  required=True)
-parser.add_argument("-r", "--role", help="Enter role name 'admin' or 'normal-user'.",  default='normal-user',  required=False)
+parser.add_argument("-r", "--role", help="Enter role name 'admin' or default 'normal-user'.",  default='normal-user',  required=False)
 args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -132,8 +131,8 @@ if __name__ == '__main__':
     session, key = login_suma(suma_login)
     suma_users = get_suma_users(session, key)
     ad_users = get_ad_users(args.group)
-    print("suma users: %s" % suma_users)
-    print("AD users: %s" % ad_users)
+    # print("suma users: %s" % suma_users)
+    # print("AD users: %s" % ad_users)
     new_users(ad_users, suma_users, session, key, args.role)
     delete_users(ad_users, suma_users, session, key)
     list_roles(session, key)
