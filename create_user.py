@@ -38,23 +38,49 @@ def suma_logout(session, key):
 
 def get_suma_users(session, key):
     suma_users = session.user.listUsers(key)
+    suma_user_list = []
     for i in suma_users:
-        print("login: %s " % i['login'])
-    return suma_users
+         #print("login: %s " % i['login'])
+         user_details = session.user.getDetails(key, i['login'])
+         if user_details['use_pam']:
+             suma_user_list.append(i['login'])
+    return suma_user_list
 
 def get_ad_users(ad_group):
     cmd = '/usr/bin/getent'
-    # mygrep = '| cut -f4 -d:'
-    # temp = subprocess.Popen([cmd, 'group', ad_group, mygrep], stdout = subprocess.PIPE)
-        # get the output as a string
-    # output = str(temp.communicate())
 
-    ps = subprocess.run([cmd, 'group', ad_group], check=True, capture_output=True)
-    output = subprocess.run(['cut', '-f4', '-d:'],
-                              input=ps.stdout, capture_output=True)
-    print("users from AD: %s" % output)
+    ps = subprocess.Popen([cmd, 'group', ad_group], stdout=subprocess.PIPE)
+    cut_output = subprocess.Popen(['/usr/bin/cut', '-f4', '-d:'],
+                              stdin=ps.stdout, stdout=subprocess.PIPE)
+    ps.stdout.close()
+    output = cut_output.communicate()[0]
+    tempstring = output.decode("utf-8")
+    tempstring = tempstring.rstrip("\n")
+    ad_users = tempstring.split(",")
+    return ad_users
 
-    return output
+def new_users(ad_users, suma_users, session, key):
+    email_domain = "@richemont.com"
+    default_pwd = "asdfasdf"
+    set_ad_users = set(ad_users)
+    set_suma_users = set(suma_users)
+    new_diff_users = set_ad_users.difference(set_suma_users)
+    print("diff ad_users: %s" % list(new_diff_users))
+    for i in list(new_diff_users):
+        email = i + email_domain
+        print("email address is: %s" % email)
+        ret = session.user.create(key, i, default_pwd, i, i, email, 1)
+        if ret == 1:
+            print("User %s created." % i)
+    return
+
+def delete_users(ad_users, suma_users, session, key):
+    set_ad_users = set(ad_users)
+    set_suma_users = set(suma_users)
+    new_diff_users = set_suma_users.difference(set_ad_users)
+    print("diff to delete users: %s" % list(new_diff_users))
+
+    return
 
 parser = argparse.ArgumentParser()
 #parser.add_argument("-v", "--verbosity", action="count", default=0)
@@ -72,5 +98,8 @@ if __name__ == '__main__':
     session, key = login_suma(suma_login)
     suma_users = get_suma_users(session, key)
     ad_users = get_ad_users(args.group)
-
+    print("suma users: %s" % suma_users)
+    print("AD users: %s" % ad_users)
+    new_users(ad_users, suma_users, session, key)
+    delete_users(ad_users, suma_users, session, key)
     suma_logout(session, key)
