@@ -59,7 +59,7 @@ def get_ad_users(ad_group):
     ad_users = tempstring.split(",")
     return ad_users
 
-def new_users(ad_users, suma_users, session, key):
+def new_users(ad_users, suma_users, session, key, role):
     email_domain = "@richemont.com"
     default_pwd = "asdfasdf"
     set_ad_users = set(ad_users)
@@ -68,10 +68,33 @@ def new_users(ad_users, suma_users, session, key):
     print("diff ad_users: %s" % list(new_diff_users))
     for i in list(new_diff_users):
         email = i + email_domain
-        print("email address is: %s" % email)
         ret = session.user.create(key, i, default_pwd, i, i, email, 1)
         if ret == 1:
             print("User %s created." % i)
+            add_roles(role, i, session, key)
+        else:
+            print("Failed to create user %s." % i)
+    return
+
+def add_roles(roles, login, session, key):
+    if roles in "admin":
+        role_list = ['org_admin', 'channel_admin', 'config_admin', 'system_group_admin',]
+        for r in role_list:
+            ret = session.user.addRole(key, login, r)
+            if ret == 1:
+                print("User %s role %s added." % (login, r))
+            else:
+                print("Failed to add user %s role %s." % (login, r))
+
+    elif roles in "normal-user":
+        role_list = ['system_group_admin']
+        for r in role_list:
+            ret = session.user.addRole(key, login, r)
+            if ret == 1:
+                print("User %s role %s added." % (login, r))
+            else:
+                print("Failed to add user %s role %s." % (login, r))
+
     return
 
 def delete_users(ad_users, suma_users, session, key):
@@ -79,7 +102,17 @@ def delete_users(ad_users, suma_users, session, key):
     set_suma_users = set(suma_users)
     new_diff_users = set_suma_users.difference(set_ad_users)
     print("diff to delete users: %s" % list(new_diff_users))
+    for i in list(new_diff_users):
+        ret = session.user.delete(key, i)
+        if ret == 1:
+            print("User %s deleted." % i)
+        else:
+            print("Failed to delete user %s." % i)
+    return
 
+def list_roles(session, key):
+    role_list = session.user.listAssignableRoles(key)
+    print("user roles: %s" % role_list)
     return
 
 parser = argparse.ArgumentParser()
@@ -91,6 +124,7 @@ Sample command:
 '''))
 parser.add_argument("-c", "--config", help="Enter config file in yaml format that holds login.",  default='./suma_config.yaml',  required=True)
 parser.add_argument("-g", "--group", help="Enter AD group name.",  default='testgroup',  required=True)
+parser.add_argument("-r", "--role", help="Enter role name 'admin' or 'normal-user'.",  default='normal-user',  required=False)
 args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -100,6 +134,7 @@ if __name__ == '__main__':
     ad_users = get_ad_users(args.group)
     print("suma users: %s" % suma_users)
     print("AD users: %s" % ad_users)
-    new_users(ad_users, suma_users, session, key)
+    new_users(ad_users, suma_users, session, key, args.role)
     delete_users(ad_users, suma_users, session, key)
+    list_roles(session, key)
     suma_logout(session, key)
