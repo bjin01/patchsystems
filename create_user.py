@@ -6,6 +6,7 @@ import argparse
 import getpass
 import textwrap
 import subprocess
+import logging
 from xmlrpc.client import ServerProxy, Error
 
 def get_login(path):
@@ -62,11 +63,13 @@ def new_users(ad_users, suma_users, session, key, role):
     set_ad_users = set(ad_users)
     set_suma_users = set(suma_users)
     new_diff_users = set_ad_users.difference(set_suma_users)
+    ("diff ad_users: %s" % list(new_diff_users))
     print("diff ad_users: %s" % list(new_diff_users))
     for i in list(new_diff_users):
         email = i + email_domain
         ret = session.user.create(key, i, default_pwd, i, i, email, 1)
         if ret == 1:
+            logger.info("User %s created.", i)
             print("User %s created." % i)
             add_roles(role, i, session, key)
         else:
@@ -79,6 +82,7 @@ def add_roles(roles, login, session, key):
         for r in role_list:
             ret = session.user.addRole(key, login, r)
             if ret == 1:
+                logger.info("User %s role %s added.", login, r)
                 print("User %s role %s added." % (login, r))
             else:
                 print("Failed to add user %s role %s." % (login, r))
@@ -88,6 +92,7 @@ def add_roles(roles, login, session, key):
         for r in role_list:
             ret = session.user.addRole(key, login, r)
             if ret == 1:
+                logger.info("User %s role %s added.", login, r)
                 print("User %s role %s added." % (login, r))
             else:
                 print("Failed to add user %s role %s." % (login, r))
@@ -102,6 +107,7 @@ def delete_users(ad_users, suma_users, session, key):
     for i in list(new_diff_users):
         ret = session.user.delete(key, i)
         if ret == 1:
+            logger.info("User %s deleted.", i)
             print("User %s deleted." % i)
         else:
             print("Failed to delete user %s." % i)
@@ -126,13 +132,18 @@ parser.add_argument("-g", "--group", help="Enter AD group name.",  default='test
 parser.add_argument("-r", "--role", help="Enter role name 'admin' or default 'normal-user'.",  default='normal-user',  required=False)
 args = parser.parse_args()
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG,
+format='%(asctime)s %(levelname)s %(message)s',
+      filename='/var/log/create_user.log',
+      filemode='w')
+
 if __name__ == '__main__':
     suma_login = get_login(args.config)
     session, key = login_suma(suma_login)
     suma_users = get_suma_users(session, key)
     ad_users = get_ad_users(args.group)
-    # print("suma users: %s" % suma_users)
-    # print("AD users: %s" % ad_users)
+
     new_users(ad_users, suma_users, session, key, args.role)
     delete_users(ad_users, suma_users, session, key)
     list_roles(session, key)
