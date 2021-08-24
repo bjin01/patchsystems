@@ -69,3 +69,4 @@ if __name__ == '__main__':
     ad_users = get_ad_users(args.group)
 
     client.close()
+     getent group chvggs-server_unix_admins | cut -f4 -d: | sed 's/,/ /g'
