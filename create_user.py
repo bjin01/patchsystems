@@ -15,7 +15,7 @@ def get_login(path):
         path = os.path.join(os.environ["HOME"], "suma_config.yaml")
     with open(path) as f:
         login = yaml.load_all(f, Loader=yaml.FullLoader)
-        print("see yaml: %s" % login)
+        
         for a in login:
             login = a
 
@@ -44,7 +44,8 @@ def get_suma_users(session, key):
 
 def get_ad_users(ad_group):
     cmd = '/usr/bin/getent'
-    temp = subprocess.Popen([cmd, 'group', ad_group], stdout = subprocess.PIPE)
+    mygrep = '| cut -f4 -d: | sed 's/,/ /g''
+    temp = subprocess.Popen([cmd, 'group', ad_group, mygrep], stdout = subprocess.PIPE)
         # get the output as a string
     output = str(temp.communicate())
     print("users from AD: %s" % output)
@@ -68,5 +69,4 @@ if __name__ == '__main__':
     suma_users = get_suma_users(session, key)
     ad_users = get_ad_users(args.group)
 
-    client.close()
-     getent group chvggs-server_unix_admins | cut -f4 -d: | sed 's/,/ /g'
+    suma_logout(session, key)
