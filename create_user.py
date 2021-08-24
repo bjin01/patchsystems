@@ -44,10 +44,14 @@ def get_suma_users(session, key):
 
 def get_ad_users(ad_group):
     cmd = '/usr/bin/getent'
-    mygrep = '| cut -f4 -d: | sed 's/,/ /g''
-    temp = subprocess.Popen([cmd, 'group', ad_group, mygrep], stdout = subprocess.PIPE)
+    # mygrep = '| cut -f4 -d:'
+    # temp = subprocess.Popen([cmd, 'group', ad_group, mygrep], stdout = subprocess.PIPE)
         # get the output as a string
-    output = str(temp.communicate())
+    # output = str(temp.communicate())
+
+    ps = subprocess.run([cmd, 'group', ad_group], check=True, capture_output=True)
+    output = subprocess.run(['cut', '-f4', '-d:'],
+                              input=ps.stdout, capture_output=True)
     print("users from AD: %s" % output)
 
     return output
