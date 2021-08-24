@@ -58,12 +58,13 @@ Sample command:
               python3 create_user.py -f suma_config.yaml \n \
 ''')) 
 parser.add_argument("-c", "--config", help="Enter config file in yaml format that holds login.",  default='./suma_config.yaml',  required=True))
+parser.add_argument("-g", "--group", help="Enter AD group name.",  default='testgroup',  required=True))
 args = parser.parse_args()
 
 if __name__ == '__main__': 
     suma_login = get_login(args.config)
     session, key = login_suma(suma_login)
     suma_users = get_suma_users(session, key)
-    ad_users = get_ad_users(ad_group)
+    ad_users = get_ad_users(args.group)
 
     client.close()
