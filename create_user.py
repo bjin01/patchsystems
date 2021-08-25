@@ -59,7 +59,7 @@ def get_ad_users(ad_groups, yaml_conf):
         ad_users = tempstring.split(",")
         
         for a in ad_users:
-            login_name = yaml_conf['domain'] + '\\' + a
+            login_name = yaml_conf['domain'] + "\\" + a
             ad_user_dict[login_name] = b
             #print("dict %s" % ad_user_dict)
         user_list += ad_user_dict
@@ -76,14 +76,16 @@ def new_users(ad_users, suma_users, session, key, ad_user_dict):
     print("diff ad_users: %s" % list(new_diff_users))
     for i in list(new_diff_users):
         temp_username = i.split('\\')
-        email = temp_username[1] + email_domain
-        ret = session.user.create(key, i, default_pwd, i, i, email, 1)
-        if ret == 1:
-            logger.info("User %s created.", i)
-            print("User %s created." % i)
-            add_roles(ad_user_dict[i], i, session, key)
-        else:
-            print("Failed to create user %s." % i)
+        print("let see the result after split of backslack %s" % temp_username)
+        if temp_username[1] != "":
+            email = temp_username[1] + email_domain
+            ret = session.user.create(key, i, default_pwd, i, i, email, 1)
+            if ret == 1:
+                logger.info("User %s created.", i)
+                print("User %s created." % i)
+                add_roles(ad_user_dict[i], i, session, key)
+            else:
+                print("Failed to create user %s." % i)
     return
 
 def add_roles(roles, login, session, key):
