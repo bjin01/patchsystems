@@ -1,3 +1,8 @@
 suma_host: bjsuma.bo2go.home
 suma_user: bjin
 suma_password: suse1234
+domain: RCCAD
+groups:
+  susemanager: admin
+  sumagroup: normal-user
+

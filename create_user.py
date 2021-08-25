@@ -43,7 +43,7 @@ def get_suma_users(session, key):
              suma_user_list.append(i['login'])
     return suma_user_list
 
-def get_ad_users(ad_groups):
+def get_ad_users(ad_groups, yaml_conf):
     cmd = '/usr/bin/getent'
     user_list = []
     ad_user_dict = {}
@@ -59,7 +59,8 @@ def get_ad_users(ad_groups):
         ad_users = tempstring.split(",")
         
         for a in ad_users:
-            ad_user_dict[a] = b
+            login_name = yaml_conf['domain'] + '\\' + a
+            ad_user_dict[login_name] = b
             #print("dict %s" % ad_user_dict)
         user_list += ad_user_dict
     #print("final ad user list from all groups: %s " % user_list)
@@ -152,7 +153,7 @@ if __name__ == '__main__':
     #print("groups in yaml file: %s" % suma_login['groups'])
     session, key = login_suma(suma_login)
     suma_users = get_suma_users(session, key)
-    ad_users, ad_user_dict = get_ad_users(suma_login['groups'])
+    ad_users, ad_user_dict = get_ad_users(suma_login['groups'], suma_login)
 
     new_users(ad_users, suma_users, session, key, ad_user_dict)
     delete_users(ad_users, suma_users, session, key)
