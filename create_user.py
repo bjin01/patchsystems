@@ -43,7 +43,7 @@ def get_suma_users(session, key):
              suma_user_list.append(i['login'])
     return suma_user_list
 
-def get_ad_users(ad_groups, yaml_conf):
+def get_ad_users(ad_groups):
     cmd = '/usr/bin/getent'
     user_list = []
     ad_user_dict = {}
@@ -59,8 +59,7 @@ def get_ad_users(ad_groups, yaml_conf):
         ad_users = tempstring.split(",")
         
         for a in ad_users:
-            login_name = yaml_conf['domain'] + "\\" + a
-            ad_user_dict[login_name] = b
+            ad_user_dict[a] = b
             #print("dict %s" % ad_user_dict)
         user_list += ad_user_dict
     #print("final ad user list from all groups: %s " % user_list)
@@ -75,17 +74,20 @@ def new_users(ad_users, suma_users, session, key, ad_user_dict):
     ("diff ad_users: %s" % list(new_diff_users))
     print("diff ad_users: %s" % list(new_diff_users))
     for i in list(new_diff_users):
-        temp_username = i.split('\\')
-        print("let see the result after split of backslack %s" % temp_username)
-        if temp_username[1] != "":
+        if "\\" in i:
+            temp_username = i.split('\\')
+        #print("let see the result after split of backslack %s" % temp_username)
             email = temp_username[1] + email_domain
             ret = session.user.create(key, i, default_pwd, i, i, email, 1)
-            if ret == 1:
-                logger.info("User %s created.", i)
-                print("User %s created." % i)
-                add_roles(ad_user_dict[i], i, session, key)
-            else:
-                print("Failed to create user %s." % i)
+        else:
+            email = i + email_domain
+            ret = session.user.create(key, i, default_pwd, i, i, email, 1)
+        if ret == 1:
+            logger.info("User %s created.", i)
+            print("User %s created." % i)
+            add_roles(ad_user_dict[i], i, session, key)
+        else:
+            print("Failed to create user %s." % i)
     return
 
 def add_roles(roles, login, session, key):
@@ -156,7 +158,7 @@ if __name__ == '__main__':
     #print("groups in yaml file: %s" % suma_login['groups'])
     session, key = login_suma(suma_login)
     suma_users = get_suma_users(session, key)
-    ad_users, ad_user_dict = get_ad_users(suma_login['groups'], suma_login)
+    ad_users, ad_user_dict = get_ad_users(suma_login['groups'])
 
     new_users(ad_users, suma_users, session, key, ad_user_dict)
     delete_users(ad_users, suma_users, session, key)
