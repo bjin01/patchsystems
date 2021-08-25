@@ -3,7 +3,6 @@
 import yaml
 import os
 import argparse
-import getpass
 import textwrap
 import subprocess
 import logging
@@ -44,20 +43,29 @@ def get_suma_users(session, key):
              suma_user_list.append(i['login'])
     return suma_user_list
 
-def get_ad_users(ad_group):
+def get_ad_users(ad_groups):
     cmd = '/usr/bin/getent'
+    user_list = []
+    ad_user_dict = {}
+    for a, b in ad_groups.items():
+        #print("lets sess the group name from dict: %s" % a)
+        ps = subprocess.Popen([cmd, 'group', a], stdout=subprocess.PIPE)
+        cut_output = subprocess.Popen(['/usr/bin/cut', '-f4', '-d:'],
+                                stdin=ps.stdout, stdout=subprocess.PIPE)
+        ps.stdout.close()
+        output = cut_output.communicate()[0]
+        tempstring = output.decode("utf-8")
+        tempstring = tempstring.rstrip("\n")
+        ad_users = tempstring.split(",")
+        
+        for a in ad_users:
+            ad_user_dict[a] = b
+            #print("dict %s" % ad_user_dict)
+        user_list += ad_user_dict
+    #print("final ad user list from all groups: %s " % user_list)
+    return user_list, ad_user_dict
 
-    ps = subprocess.Popen([cmd, 'group', ad_group], stdout=subprocess.PIPE)
-    cut_output = subprocess.Popen(['/usr/bin/cut', '-f4', '-d:'],
-                              stdin=ps.stdout, stdout=subprocess.PIPE)
-    ps.stdout.close()
-    output = cut_output.communicate()[0]
-    tempstring = output.decode("utf-8")
-    tempstring = tempstring.rstrip("\n")
-    ad_users = tempstring.split(",")
-    return ad_users
-
-def new_users(ad_users, suma_users, session, key, role):
+def new_users(ad_users, suma_users, session, key, ad_user_dict):
     email_domain = "@richemont.com"
     default_pwd = "asdfasdf"
     set_ad_users = set(ad_users)
@@ -71,7 +79,7 @@ def new_users(ad_users, suma_users, session, key, role):
         if ret == 1:
             logger.info("User %s created.", i)
             print("User %s created." % i)
-            add_roles(role, i, session, key)
+            add_roles(ad_user_dict[i], i, session, key)
         else:
             print("Failed to create user %s." % i)
     return
@@ -123,13 +131,13 @@ parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This script creates users from AD and delete users which does not exist anymore.
 Sample command:
-              python3 create_user.py -c ./suma_config.yaml -g susemanager -r admin \n \
+              python3 create_user.py -c ./suma_config.yaml \n \
 
 If pam users from the given AD group is missing those users will be deleted from SUMA automatically.
 '''))
 parser.add_argument("-c", "--config", help="Enter config file in yaml format that holds login.",  default='./suma_config.yaml',  required=True)
-parser.add_argument("-g", "--group", help="Enter AD group name.",  default='testgroup',  required=True)
-parser.add_argument("-r", "--role", help="Enter role name 'admin' or default 'normal-user'.",  default='normal-user',  required=False)
+""" parser.add_argument("-g", "--group", help="Enter AD group name.",  default='testgroup',  required=True)
+parser.add_argument("-r", "--role", help="Enter role name 'admin' or default 'normal-user'.",  default='normal-user',  required=False) """
 args = parser.parse_args()
 
 logger = logging.getLogger(__name__)
@@ -138,13 +146,15 @@ format='%(asctime)s %(levelname)s %(message)s',
       filename='/var/log/create_user.log',
       filemode='w')
 
+
 if __name__ == '__main__':
     suma_login = get_login(args.config)
+    #print("groups in yaml file: %s" % suma_login['groups'])
     session, key = login_suma(suma_login)
     suma_users = get_suma_users(session, key)
-    ad_users = get_ad_users(args.group)
+    ad_users, ad_user_dict = get_ad_users(suma_login['groups'])
 
-    new_users(ad_users, suma_users, session, key, args.role)
+    new_users(ad_users, suma_users, session, key, ad_user_dict)
     delete_users(ad_users, suma_users, session, key)
     list_roles(session, key)
     suma_logout(session, key)
