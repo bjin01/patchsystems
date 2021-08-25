@@ -75,7 +75,8 @@ def new_users(ad_users, suma_users, session, key, ad_user_dict):
     ("diff ad_users: %s" % list(new_diff_users))
     print("diff ad_users: %s" % list(new_diff_users))
     for i in list(new_diff_users):
-        email = i + email_domain
+        temp_username = i.split('\\')
+        email = temp_username[1] + email_domain
         ret = session.user.create(key, i, default_pwd, i, i, email, 1)
         if ret == 1:
             logger.info("User %s created.", i)
