@@ -79,10 +79,11 @@ def suma_logout(session, key):
     return """
 
 def printdict(dict_object):
-    print("Item---------------------------------------------")
-    for k, v in dict_object.items():    
-        print ("{:<20}".format(k), "{:<20}".format(v))
-    print("----------------------------------------------------")
+    for i in dict_object:
+        print("Item---------------------------------------------")
+        for k, v in i.items():    
+            print ("{:<20}".format(k), "{:<20}".format(v))
+        print("----------------------------------------------------")
 
 def listproject(key):
     projlist = session.contentmanagement.listProjects(key)
