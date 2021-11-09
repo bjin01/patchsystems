@@ -1,6 +1,7 @@
 #!/usr/bin/python
+
 import argparse,  getpass,  textwrap, time
-from datetime import datetime
+import datetime
 import yaml
 import os
 from xmlrpc.client import ServerProxy, Error
@@ -81,8 +82,12 @@ def suma_logout(session, key):
 def printdict(dict_object):
     for i in dict_object:
         print("Item---------------------------------------------")
-        for k, v in i.items():    
-            print ("{:<20}".format(k), "{:<20}".format(v))
+        for k, v in i.items():
+            if k in "lastBuildDate":
+                converted = datetime.datetime.strptime(v.value, "%Y%m%dT%H:%M:%S")
+                print ("{:<20}".format(k), "{:<20}".format(converted.strftime("%d.%m.%Y, %H:%M")))
+            else:
+                print ("{:<20}".format(k), "{:<20}".format(v))
         print("----------------------------------------------------")
 
 def listproject(key):
