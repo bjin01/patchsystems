@@ -1,6 +1,9 @@
 #!/usr/bin/python
-import xmlrpclib,  argparse,  getpass,  textwrap, time
+import argparse,  getpass,  textwrap, time
 from datetime import datetime
+import yaml
+import os
+from xmlrpc.client import ServerProxy, Error
 
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -34,16 +37,35 @@ parser.add_argument("--projLabel", help="Enter the project label. e.g. mytest", 
 parser.add_argument("--envLabel", help="Enter the environment label. e.g. dev",  required=False)
 args = parser.parse_args()
 
-MANAGER_URL = "http://"+ args.server+"/rpc/api"
-MANAGER_LOGIN = args.username
-MANAGER_PASSWORD = args.password
-client = xmlrpclib.Server(MANAGER_URL, verbose=0)
-key = client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
-today = datetime.today()
-earliest_occurrence = xmlrpclib.DateTime(today)
 
 status_text = ['built', 'building',  'generating_repodata']
 tasko_text = 'Check taskomatic logs in order to monitor the status of the build and promote tasks e.g. # tail -f /var/log/rhn/rhn_taskomatic_daemon.log.'
+
+def get_login(path):
+    
+    if path == "":
+        path = os.path.join(os.environ["HOME"], "suma_config.yaml")
+    with open(path) as f:
+        login = yaml.load_all(f, Loader=yaml.FullLoader)
+        for a in login:
+            login = a
+
+    return login
+
+def login_suma(login):
+    MANAGER_URL = "https://"+ login['suma_host'] +"/rpc/api"
+    MANAGER_LOGIN = login['suma_user']
+    MANAGER_PASSWORD = login['suma_password']
+    SUMA = "http://" + login['suma_user'] + ":" + login['suma_password'] + "@" + login['suma_host'] + "/rpc/api"
+    with ServerProxy(SUMA) as session_client:
+
+    #session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
+        session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
+    return session_client, session_key
+
+def suma_logout(session, key):
+    session.auth.logout(key)
+    return
 
 def printzip(dict_object):
     for i in dict_object:
@@ -60,7 +82,7 @@ def printzip(dict_object):
     return
 
 def listproject(key):
-    projlist = client.contentmanagement.listProjects(key)
+    projlist = session.contentmanagement.listProjects(key)
     if projlist:
         printzip(projlist)
         return True
@@ -69,7 +91,7 @@ def listproject(key):
         return False
 
 def listEnvironment(key, projectLabel):
-    envlist = client.contentmanagement.listProjectEnvironments(key, projectLabel)
+    envlist = session.contentmanagement.listProjectEnvironments(key, projectLabel)
     if envlist:
         printzip(envlist)
         return True
@@ -84,12 +106,12 @@ def check_env_status(key,  projLabel,  *args):
         for a in args:
             envLabel = a
     if envLabel == '':
-        lookup_proj_return = client.contentmanagement.lookupProject(key, projLabel)
+        lookup_proj_return = session.contentmanagement.lookupProject(key, projLabel)
         for k,  v in lookup_proj_return.items():
             if k in 'firstEnvironment':
                 envLabel = v
         try:
-            lookupenv = client.contentmanagement.lookupEnvironment(key, projLabel,  envLabel)
+            lookupenv = session.contentmanagement.lookupEnvironment(key, projLabel,  envLabel)
             for k,  v in lookupenv.items():
                 #print("lets see k %s, v is: %s" %(k, v))
                 if k == "status":
@@ -103,7 +125,7 @@ def check_env_status(key,  projLabel,  *args):
             exit(1)
     else:
         try:
-            lookupenv = client.contentmanagement.lookupEnvironment(key, projLabel,  envLabel)
+            lookupenv = session.contentmanagement.lookupEnvironment(key, projLabel,  envLabel)
             print("%s: %s is %s" %(projLabel, envLabel, lookupenv['status']))
         except Exception as ex:
             print("not found %s" %ex)
@@ -112,7 +134,7 @@ def check_env_status(key,  projLabel,  *args):
     return
         
 def buildproject(key,  projLabel):
-    buildresult = client.contentmanagement.buildProject(key, projLabel)
+    buildresult = session.contentmanagement.buildProject(key, projLabel)
     if buildresult == 1:
             print("Build %s task: Successful"  %(projLabel))
             print("sleep 5 seconds")
@@ -126,7 +148,7 @@ def buildproject(key,  projLabel):
 
 def promoteenvironment(key,  projLabel,  envLabel):
     try:
-        nextenvironment = client.contentmanagement.listProjectEnvironments(key, projLabel)
+        nextenvironment = session.contentmanagement.listProjectEnvironments(key, projLabel)
     except Exception as ex:
         print("not found %s" %ex)
         print("lookup project and environment label failed. exit.")
@@ -139,7 +161,7 @@ def promoteenvironment(key,  projLabel,  envLabel):
             break
    
     try:
-        promote_result = client.contentmanagement.promoteProject(key, projLabel,  envLabel)
+        promote_result = session.contentmanagement.promoteProject(key, projLabel,  envLabel)
         if promote_result == 1:
             print("promote %s %s task: Successful."  %(projLabel, envLabel))
             print("sleep 5 seconds")
@@ -153,7 +175,11 @@ def promoteenvironment(key,  projLabel,  envLabel):
         print("not found %s" %ex)
         return False
     return promote_result
-    
+
+conf_file = "/root/suma_config.yaml"
+suma_login = get_login(conf_file)
+session, key = login_suma(suma_login)
+
 if args.listProject:
     try:
         ret = listproject(key)
@@ -162,7 +188,7 @@ if args.listProject:
         print('something went wrong with listproject')
 elif args.check_status and args.projLabel: 
     if args.envLabel:
-        check_env_status(key,  args.projLabel, args.envLabel)
+        check_env_status(key, args.projLabel, args.envLabel)
     elif not args.envLabel:
         check_env_status(key,  args.projLabel)
 elif args.listEnvironment and args.projLabel:
@@ -187,3 +213,4 @@ else:
     print("Please verify you entered correct parameters. Exiting.")
 
     
+suma_logout(session, key)
