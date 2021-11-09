@@ -64,7 +64,7 @@ def suma_logout(session, key):
     session.auth.logout(key)
     return
 
-def printzip(dict_object):
+""" def printdict(dict_object):
     for i in dict_object:
         keys = i.keys()
         val = i.values()
@@ -76,12 +76,18 @@ def printzip(dict_object):
             print ("{:<20}".format(v)), 
         print("\n")
         print("----------------------------------------------------")
-    return
+    return """
+
+def printdict(dict_object):
+    print("Item---------------------------------------------")
+    for k, v in dict_object.items():    
+        print ("{:<20}".format(k), "{:<20}".format(v))
+    print("----------------------------------------------------")
 
 def listproject(key):
     projlist = session.contentmanagement.listProjects(key)
     if projlist:
-        printzip(projlist)
+        printdict(projlist)
         return True
     else:
         print("no projects found")
@@ -90,7 +96,7 @@ def listproject(key):
 def listEnvironment(key, projectLabel):
     envlist = session.contentmanagement.listProjectEnvironments(key, projectLabel)
     if envlist:
-        printzip(envlist)
+        printdict(envlist)
         return True
     else:
         print("no projectEnvironments found")
