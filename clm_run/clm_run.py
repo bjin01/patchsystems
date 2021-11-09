@@ -16,11 +16,11 @@ parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This scripts helps to manage content lifecycle management projects. 
 Sample command:
-              python clm_run.py -s bjsuma.bo2go.home -u bjin -p suse1234 --listProject
-              python clm_run.py -s bjsuma.bo2go.home -u bjin -p suse1234 --listEnvironment --projLabel myprojlabel
-              python clm_run.py -s bjsuma.bo2go.home -u bjin -p suse1234 --build --projLabel myprojlabel \n \
-              python clm_run.py -s bjsuma.bo2go.home -u bjin -p suse1234 --promote --projLabel myprojlabel --envLabel teststage  \n \
-              python clm_run.py -s bjsuma.bo2go.home -u bjin -p suse1234 --check_status --projLabel myprojlabel --envLabel teststage  \n \
+              python clm_run.py --listProject
+              python clm_run.py --listEnvironment --projLabel myprojlabel
+              python clm_run.py --build --projLabel myprojlabel \n \
+              python clm_run.py --promote --projLabel myprojlabel --envLabel teststage  \n \
+              python clm_run.py --check_status --projLabel myprojlabel --envLabel teststage  \n \
 The script can build project, update and promote stages or environments.
 Check taskomatic logs in order to monitor the status of the build and promote tasks e.g. # tail -f /var/log/rhn/rhn_taskomatic_daemon.log. '''))
 
@@ -29,9 +29,6 @@ parser.add_argument("--listEnvironment", action="store_true")
 parser.add_argument("--check_status", action="store_true")
 parser.add_argument("--build", action="store_true")
 parser.add_argument("--promote", action="store_true")
-parser.add_argument("-s", "--server", help="Enter your suse manager host address e.g. myserver.abd.domain",  default='localhost',  required=True)
-parser.add_argument("-u", "--username", help="Enter your suse manager loginid e.g. admin ", default='admin',  required=True)
-parser.add_argument('-p', action=Password, nargs='?', dest='password', help='Enter your password',  required=True)
 parser.add_argument("--projname", help="Enter the desired project name. e.g. myproject",  required=False)
 parser.add_argument("--projLabel", help="Enter the project label. e.g. mytest",  required=False)
 parser.add_argument("--envLabel", help="Enter the environment label. e.g. dev",  required=False)
