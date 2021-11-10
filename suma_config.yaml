@@ -5,4 +5,37 @@ domain: RCCAD
 groups:
   susemanager: admin
   sumagroup: normal-user
+baseChannelLabel: sles15sp2-dev-sle-product-sles15-sp2-pool-x86_64
+childChannelLabels:
+  - sles15sp2-dev-nvidia-compute-sle-15-x86_64-we-sp2
+  - sles15sp2-dev-sle-15-sp2-desktop-nvidia-driver-we
+  - sles15sp2-dev-sle-manager-tools15-pool-x86_64-sp2
+  - sles15sp2-dev-sle-manager-tools15-updates-x86_64-sp2
+  - sles15sp2-dev-sle-module-basesystem15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-basesystem15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-module-cap-tools15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-cap-tools15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-module-containers15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-containers15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-module-desktop-applications15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-desktop-applications15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-module-devtools15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-devtools15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-module-live-patching15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-live-patching15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-module-nvidia-compute-15-pool-x86_64-we-sp2
+  - sles15sp2-dev-sle-module-nvidia-compute-15-updates-x86_64-we-sp2
+  - sles15sp2-dev-sle-module-public-cloud15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-public-cloud15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-module-python2-15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-python2-15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-module-server-applications15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-server-applications15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-module-web-scripting15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-module-web-scripting15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-product-ha15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-product-ha15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-product-sles15-sp2-updates-x86_64
+  - sles15sp2-dev-sle-product-we15-sp2-pool-x86_64
+  - sles15sp2-dev-sle-product-we15-sp2-updates-x86_64
 
