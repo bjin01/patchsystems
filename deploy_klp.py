@@ -74,12 +74,12 @@ def getpkg_servers_lists(mylist):
             continue
         
         for s in temp_list:
-            if s['name'] in pkgname:
-                print(s['name'], " : ", s['id'])
+            if s['name'].startswith(pkgname):
+                print(s['name'], " : ", s['id'], " for systemid ", i)
                 temp_pkg_list.append(s['id'])
                 temp_server_list.append(i)
-    final_pkg_list = set(temp_pkg_list)
-    final_server_list = set(temp_server_list)
+    final_pkg_list = list(set(temp_pkg_list))
+    final_server_list = list(set(temp_server_list))
     return final_pkg_list, final_server_list
 
 def isNotBlank(myString):
