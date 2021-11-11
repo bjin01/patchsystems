@@ -63,22 +63,22 @@ def printdict(dict_object):
     print("----------------------------------------------------")
 
 def getpkg_servers_lists(mylist):
-    pkgname = "kernel-livepatch"
-    temp_pkg_list = []
+    patch_synopsis = "important: Security update for the Linux Kernel (Live Patch"
+
+    temp_patch_list = []
     temp_server_list = []
     for i in mylist:
         try:
-            temp_list = session.system.listLatestUpgradablePackages(key, i)
+            temp_list = session.system.getRelevantErrata(key, i)
         except:
-            print("failed to obtain pkg list from %s" %(i))
-            continue
-        
+            print("failed to obtain patch list from %s" %(i))
+        print(temp_list)
         for s in temp_list:
-            if s['name'].startswith(pkgname):
-                print(s['name'], " : ", s['to_package_id'], " for systemid ", i)
-                temp_pkg_list.append(s['to_package_id'])
+            if s['advisory_synopsis'].startswith(patch_synopsis):
+                print(s['advisory_synopsis'], " : ", s['id'], " for systemid ", i)
+                temp_patch_list.append(s['id'])
                 temp_server_list.append(i)
-    final_pkg_list = list(set(temp_pkg_list))
+    final_pkg_list = list(set(temp_patch_list))
     final_server_list = list(set(temp_server_list))
     return final_pkg_list, final_server_list
 
@@ -98,19 +98,19 @@ def schedule_klp_upgrade(suma_data, groupname):
     except Exception as e:
         print("get systems list from group failed. %s" %(e))
         exit(1)
-    print("Scheduling SUSE Live Patching Upgrades.")
+    print("Scheduling SUSE Live Patching patches.")
 
     server_id_list = []
-    pkg_list = []
+    patch_list = []
     for a in result_systemlist:
         server_id_list.append(a['id'])
        
-    pkg_list, server_id_list = getpkg_servers_lists(server_id_list)
-    print(pkg_list, server_id_list)
-    if len(pkg_list) and len(server_id_list) > 0:
+    patch_list, server_id_list = getpkg_servers_lists(server_id_list)
+    print(patch_list, server_id_list)
+    if len(patch_list) and len(server_id_list) > 0:
         try:
-            result_job = session.system.schedulePackageInstall(key, server_id_list, pkg_list, earliest_occurrence, True)
-            print("Job ID: %s" %(result_job))
+            result_job = session.system.scheduleApplyErrata(key, server_id_list, patch_list, earliest_occurrence, True, True)
+            print("Jobs created %s" %(result_job))
         except Exception as e:
             print("scheduling job failed %s." %(e))
     else:
