@@ -158,7 +158,6 @@ else:
     session, key = login_suma(suma_data)
 
 if isNotBlank(args.group):
-    
     result = schedule_klp_install(suma_data, args.group)
     print(result)
 elif isNotBlank(args.servername):
