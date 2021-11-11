@@ -15,12 +15,14 @@ class Password(argparse.Action):
 
 parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
-This scripts helps to change channel assignment. 
+This scripts helps to attach source channels to clm project 
 Sample command:
-              python3 assign_channels.py--config /root/suma_config.yaml --group testsystems
-The script can changes channel assignment for given group and channels. '''))
+              python3 attach_source_channels.py --attach --config /root/suma_config.yaml 
+              python3 attach_source_channels.py --detach --config /root/suma_config.yaml 
+The script can attach source channels. '''))
+parser.add_argument("--attach", action="store_true")
+parser.add_argument("--detach", action="store_true")
 parser.add_argument("--config", help="Enter the config file name that contains login and channel information e.g. /root/suma_config.yaml",  required=False)
-parser.add_argument("--group", help="Enter the group name for which systems of a group you want to change channels. e.g. testsystems",  required=False)
 args = parser.parse_args()
 
 
@@ -69,17 +71,28 @@ def isNotBlank(myString):
     return False
 
 
-def assigne_channels(suma_data, groupname):
-    nowlater = datetime.datetime.now()
-    earliest_occurrence = DateTime(nowlater)
-    result_systemlist = session.systemgroup.listSystemsMinimal(key, groupname)
-    print("changing channels for: ")
-    for i in result_systemlist:
+def attach_source_channels(suma_data):
+    sourceType = "software"
+
+    print("Attaching source channels to project: %s " %(suma_data['clm_project']))
+    for i in suma_data['sourceChannelLabels']:
         try:
-            result_change_channels = session.system.scheduleChangeChannels(key, i['id'], suma_data['baseChannelLabel'], suma_data['childChannelLabels'], earliest_occurrence)
-            print("%s" %(i['name']))
+            result_systemlist = session.contentmanagement.attachSource(key, suma_data['clm_project'], sourceType, i)
+            print("%s" %(i))
         except:
-            print("change channels for %s failed." %(i['name']))
+            print("Attaching channel %s failed." %(i))
+    return "finished."
+
+def detach_source_channels(suma_data):
+    sourceType = "software"
+
+    print("Detaching source channels from project: %s " %(suma_data['clm_project']))
+    for i in suma_data['sourceChannelLabels']:
+        try:
+            result_systemlist = session.contentmanagement.detachSource(key, suma_data['clm_project'], sourceType, i)
+            print("%s" %(i))
+        except:
+            print("Detaching channel %s failed." %(i))
     return "finished."
 
 
@@ -91,8 +104,15 @@ else:
     suma_data = get_login(conf_file)
     session, key = login_suma(suma_data)
 
-if args.group:
-    result = assigne_channels(suma_data, args.group)
-    print(result)
+if isNotBlank(suma_data['clm_project']):
+    if args.attach:
+        result = attach_source_channels(suma_data)
+        print(result)
+    if args.detach:
+        result = detach_source_channels(suma_data)
+        print(result)
+else:
+    print("clm_project label is empty.")
+    exit(1)
     
 suma_logout(session, key)

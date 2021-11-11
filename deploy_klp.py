@@ -15,10 +15,11 @@ class Password(argparse.Action):
 
 parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
-This scripts helps to change channel assignment. 
+This scripts helps to attach source channels to clm project 
 Sample command:
-              python3 assign_channels.py--config /root/suma_config.yaml --group testsystems
-The script can changes channel assignment for given group and channels. '''))
+              python3 deploy_klp.py --config /root/suma_config.yaml --group api_group_test
+The script can attach source channels. '''))
+
 parser.add_argument("--config", help="Enter the config file name that contains login and channel information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("--group", help="Enter the group name for which systems of a group you want to change channels. e.g. testsystems",  required=False)
 args = parser.parse_args()
@@ -51,15 +52,34 @@ def suma_logout(session, key):
     return
 
 def printdict(dict_object):
-    for i in dict_object:
-        print("Item---------------------------------------------")
-        for k, v in i.items():
-            if k in "lastBuildDate":
-                converted = datetime.datetime.strptime(v.value, "%Y%m%dT%H:%M:%S")
-                print ("{:<20}".format(k), "{:<20}".format(converted.strftime("%d.%m.%Y, %H:%M")))
-            else:
-                print ("{:<20}".format(k), "{:<20}".format(v))
-        print("----------------------------------------------------")
+    print("Item---------------------------------------------")
+    for a, b in dict_object.items():
+        if isinstance(b, dict):
+            for k, v in b.items():
+                print("{:<20}".format(k), "{:<20}".format(v))
+        else:
+            print("{:<20}".format(a), "{:<20}".format(b))
+        
+    print("----------------------------------------------------")
+
+def getpkg_servers_lists(mylist):
+    pkgname = "patterns-lp-lp_sles"
+    temp_pkg_list = []
+    temp_server_list = []
+    for i in mylist:
+        try:
+            temp_list = session.system.listLatestInstallablePackages(key, i)
+        except:
+            print("failed to obtain pkg list from %s" %(i))
+            continue
+        
+        for s in temp_list:
+            if s['name'] in pkgname:
+                print(s['name'], " : ", s['id'])
+                temp_pkg_list.append(s['id'])
+                temp_server_list.append(i)
+    
+    return temp_pkg_list, temp_server_list
 
 def isNotBlank(myString):
     if myString and myString.strip():
@@ -68,18 +88,32 @@ def isNotBlank(myString):
     #myString is None OR myString is empty or blank
     return False
 
-
-def assigne_channels(suma_data, groupname):
+def schedule_klp_install(suma_data, groupname):
+    
     nowlater = datetime.datetime.now()
     earliest_occurrence = DateTime(nowlater)
-    result_systemlist = session.systemgroup.listSystemsMinimal(key, groupname)
-    print("changing channels for: ")
-    for i in result_systemlist:
+    try:
+        result_systemlist = session.systemgroup.listSystemsMinimal(key, groupname)
+    except Exception as e:
+        print("get systems list from group failed. %s" %(e))
+        exit(1)
+    print("Scheduling SUSE Live Patching initial rollout")
+
+    server_id_list = []
+    pkg_list = []
+    for a in result_systemlist:
+        server_id_list.append(a['id'])
+       
+    pkg_list, server_id_list = getpkg_servers_lists(server_id_list)
+    print(pkg_list, server_id_list)
+    if len(pkg_list) and len(server_id_list) > 0:
         try:
-            result_change_channels = session.system.scheduleChangeChannels(key, i['id'], suma_data['baseChannelLabel'], suma_data['childChannelLabels'], earliest_occurrence)
-            print("%s" %(i['name']))
-        except:
-            print("change channels for %s failed." %(i['name']))
+            result_job = session.system.schedulePackageInstall(key, server_id_list, pkg_list, earliest_occurrence, True)
+            print("Job ID: %s" %(result_job))
+        except Exception as e:
+            print("scheduling job failed %s." %(e))
+    else:
+        print("Nothing to install. Either already installed or channels not available to the systems.")
     return "finished."
 
 
@@ -91,8 +125,12 @@ else:
     suma_data = get_login(conf_file)
     session, key = login_suma(suma_data)
 
-if args.group:
-    result = assigne_channels(suma_data, args.group)
+if isNotBlank(args.group):
+    
+    result = schedule_klp_install(suma_data, args.group)
     print(result)
+else:
+    print("group name is empty.")
+    exit(1)
     
 suma_logout(session, key)
