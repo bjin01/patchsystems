@@ -15,10 +15,10 @@ class Password(argparse.Action):
 
 parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
-This scripts helps to attach source channels to clm project 
+This scripts helps to deploy kernel live patching patches  
 Sample command:
               python3 update_klp.py --config /root/suma_config.yaml --group api_group_test
-The script can attach source channels. '''))
+The script helps to deploy kernel live patching patches to a group of systems. '''))
 
 parser.add_argument("--config", help="Enter the config file name that contains login and channel information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("--group", help="Enter the group name for which systems of a group you want to change channels. e.g. testsystems",  required=False)
@@ -72,7 +72,6 @@ def getpkg_servers_lists(mylist):
             temp_list = session.system.getRelevantErrata(key, i)
         except:
             print("failed to obtain patch list from %s" %(i))
-        print(temp_list)
         for s in temp_list:
             if s['advisory_synopsis'].startswith(patch_synopsis):
                 print(s['advisory_synopsis'], " : ", s['id'], " for systemid ", i)
@@ -106,7 +105,7 @@ def schedule_klp_upgrade(suma_data, groupname):
         server_id_list.append(a['id'])
        
     patch_list, server_id_list = getpkg_servers_lists(server_id_list)
-    print(patch_list, server_id_list)
+    # print(patch_list, server_id_list)
     if len(patch_list) and len(server_id_list) > 0:
         try:
             result_job = session.system.scheduleApplyErrata(key, server_id_list, patch_list, earliest_occurrence, True, True)
