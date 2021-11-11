@@ -6,8 +6,6 @@ import yaml
 import os
 from xmlrpc.client import ServerProxy, Error, DateTime
 
-from update_klp import schedule_klp_upgrade
-
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
         if values is None:
@@ -20,12 +18,12 @@ parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescri
 This scripts helps to attach source channels to clm project 
 Sample command:
               python3 deploy_klp.py --config /root/suma_config.yaml --group api_group_test
-              python3 deploy_klp.py --config /root/suma_config.yaml --servername mytestserver.example.com
-The script can attach source channels. '''))
-
+              python3 deploy_klp.py --config /root/suma_config.yaml --servername mytestserver.example.com \
+The script deployes klp. '''))
+parser.add_argument("--servername", help="Enter exact system name shown in SUSE Manager to deploy klp to it. e.g. mytestserver.example.com",  required=False)
 parser.add_argument("--config", help="Enter the config file name that contains login and channel information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("--group", help="Enter the group name for which systems of a group you want to change channels. e.g. testsystems",  required=False)
-parser.add_argument("--servername", help="Enter exact system name shown in SUSE Manager to deploy klp to it. e.g. mytestserver.example.com",  required=False)
+
 args = parser.parse_args()
 
 
