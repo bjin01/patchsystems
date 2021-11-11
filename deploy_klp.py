@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescri
 This scripts helps to attach source channels to clm project 
 Sample command:
               python3 deploy_klp.py --config /root/suma_config.yaml --group api_group_test
-              python3 deploy_klp.py --config /root/suma_config.yaml --servername mytestserver.example.com \
+              python3 deploy_klp.py --config /root/suma_config.yaml --servername mytestserver.example.com
 The script deployes klp. '''))
 parser.add_argument("--servername", help="Enter exact system name shown in SUSE Manager to deploy klp to it. e.g. mytestserver.example.com",  required=False)
 parser.add_argument("--config", help="Enter the config file name that contains login and channel information e.g. /root/suma_config.yaml",  required=False)
