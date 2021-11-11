@@ -1,0 +1,113 @@
+  - sap_sles15_2-test_systems-sle-manager-tools15-pool-x86_64-sap-sp2
+  - sap_sles15_2-test_systems-sle-manager-tools15-updates-x86_64-sap-sp2
+  - sap_sles15_2-test_systems-sle-module-basesystem15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-basesystem15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-cap-tools15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-cap-tools15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-containers15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-containers15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-desktop-applications15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-desktop-applications15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-devtools15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-devtools15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-live-patching15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-live-patching15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-packagehub-subpackages15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-packagehub-subpackages15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-public-cloud15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-public-cloud15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-python2-15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-python2-15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-sap-applications15-sp2-pool-x86_64
+  - sap_sles15_2-test_systems-sle-module-sap-applications15-sp2-updates-x86_64
+  - sap_sles15_2-test_systems-sle-module-server-applications15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-server-applications15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-web-scripting15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-module-web-scripting15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-product-ha15-sp2-pool-x86_64-sap
+  - sap_sles15_2-test_systems-sle-product-ha15-sp2-updates-x86_64-sap
+  - sap_sles15_2-test_systems-sle-product-sles_sap15-sp2-updates-x86_64
+  - sap_sles15_2-test_systems-suse-packagehub-15-sp2-backports-pool-x86_64-sap
+  - sap_sles15_2-test_systems-suse-packagehub-15-sp2-pool-x86_64-sap
+
+  - sle-product-sles_sap15-sp2-pool-x86_64
+  - sle-manager-tools15-pool-x86_64-sap-sp2
+  - sle-manager-tools15-updates-x86_64-sap-sp2
+  - sle-module-basesystem15-sp2-pool-x86_64-sap
+  - sle-module-basesystem15-sp2-updates-x86_64-sap
+  - sle-module-cap-tools15-sp2-pool-x86_64-sap
+  - sle-module-cap-tools15-sp2-updates-x86_64-sap
+  - sle-module-containers15-sp2-pool-x86_64-sap
+  - sle-module-containers15-sp2-updates-x86_64-sap
+  - sle-module-desktop-applications15-sp2-pool-x86_64-sap
+  - sle-module-desktop-applications15-sp2-updates-x86_64-sap
+  - sle-module-devtools15-sp2-pool-x86_64-sap
+  - sle-module-devtools15-sp2-updates-x86_64-sap
+  - sle-module-live-patching15-sp2-pool-x86_64-sap
+  - sle-module-live-patching15-sp2-updates-x86_64-sap
+  - sle-module-packagehub-subpackages15-sp2-pool-x86_64-sap
+  - sle-module-packagehub-subpackages15-sp2-updates-x86_64-sap
+  - sle-module-public-cloud15-sp2-pool-x86_64-sap
+  - sle-module-public-cloud15-sp2-updates-x86_64-sap
+  - sle-module-python2-15-sp2-pool-x86_64-sap
+  - sle-module-python2-15-sp2-updates-x86_64-sap
+
+
+  - sle-module-sap-applications15-sp2-pool-x86_64
+  - sle-module-sap-applications15-sp2-updates-x86_64
+  - sle-module-server-applications15-sp2-pool-x86_64-sap
+  - sle-module-server-applications15-sp2-updates-x86_64-sap
+  - sle-module-web-scripting15-sp2-pool-x86_64-sap
+  - sle-module-web-scripting15-sp2-updates-x86_64-sap
+  - sle-product-ha15-sp2-pool-x86_64-sap
+  - sle-product-ha15-sp2-updates-x86_64-sap
+  - sle-product-sles_sap15-sp2-updates-x86_64
+  - suse-packagehub-15-sp2-backports-pool-x86_64-sap
+  - suse-packagehub-15-sp2-pool-x86_64-sap
+
+   sap_sles15_2_klp-test_systems-sle-product-sles_sap15-sp2-pool-x86_64
+       
+  - sap_sles15_2_klp-test_systems-sle-manager-tools15-pool-x86_64-sap-sp2
+  - sap_sles15_2_klp-test_systems-sle-manager-tools15-updates-x86_64-sap-sp2
+  - sap_sles15_2_klp-test_systems-sle-module-basesystem15-sp2-pool-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-basesystem15-sp2-updates-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-desktop-applications15-sp2-pool-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-desktop-applications15-sp2-updates-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-live-patching15-sp2-pool-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-live-patching15-sp2-updates-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-public-cloud15-sp2-pool-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-public-cloud15-sp2-updates-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-python2-15-sp2-pool-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-python2-15-sp2-updates-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-sap-applications15-sp2-pool-x86_64
+  - sap_sles15_2_klp-test_systems-sle-module-sap-applications15-sp2-updates-x86_64
+  - sap_sles15_2_klp-test_systems-sle-module-server-applications15-sp2-pool-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-server-applications15-sp2-updates-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-web-scripting15-sp2-pool-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-module-web-scripting15-sp2-updates-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-product-ha15-sp2-pool-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-product-ha15-sp2-updates-x86_64-sap
+  - sap_sles15_2_klp-test_systems-sle-product-sles_sap15-sp2-updates-x86_64
+
+sap_sles15_2_klp-prod_systems-sle-product-sles_sap15-sp2-pool-x86_64
+- sap_sles15_2_klp-prod_systems-sle-manager-tools15-pool-x86_64-sap-sp2
+- sap_sles15_2_klp-prod_systems-sle-manager-tools15-updates-x86_64-sap-sp2
+- sap_sles15_2_klp-prod_systems-sle-module-basesystem15-sp2-pool-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-basesystem15-sp2-updates-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-desktop-applications15-sp2-pool-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-desktop-applications15-sp2-updates-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-live-patching15-sp2-pool-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-live-patching15-sp2-updates-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-public-cloud15-sp2-pool-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-public-cloud15-sp2-updates-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-python2-15-sp2-pool-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-python2-15-sp2-updates-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-sap-applications15-sp2-pool-x86_64
+- sap_sles15_2_klp-prod_systems-sle-module-sap-applications15-sp2-updates-x86_64
+- sap_sles15_2_klp-prod_systems-sle-module-server-applications15-sp2-pool-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-server-applications15-sp2-updates-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-web-scripting15-sp2-pool-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-module-web-scripting15-sp2-updates-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-product-ha15-sp2-pool-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-product-ha15-sp2-updates-x86_64-sap
+- sap_sles15_2_klp-prod_systems-sle-product-sles_sap15-sp2-updates-x86_64

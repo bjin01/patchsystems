@@ -78,8 +78,9 @@ def getpkg_servers_lists(mylist):
                 print(s['name'], " : ", s['id'])
                 temp_pkg_list.append(s['id'])
                 temp_server_list.append(i)
-    
-    return temp_pkg_list, temp_server_list
+    final_pkg_list = set(temp_pkg_list)
+    final_server_list = set(temp_server_list)
+    return final_pkg_list, final_server_list
 
 def isNotBlank(myString):
     if myString and myString.strip():
