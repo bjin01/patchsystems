@@ -6,8 +6,6 @@ import yaml
 import os
 from xmlrpc.client import ServerProxy, Error, DateTime
 
-from update_klp import schedule_klp_upgrade
-
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
         if values is None:
@@ -19,13 +17,11 @@ parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This scripts helps to attach source channels to clm project 
 Sample command:
-              python3 deploy_klp.py --config /root/suma_config.yaml --group api_group_test
-              python3 deploy_klp.py --config /root/suma_config.yaml --servername mytestserver.example.com
+              python3 update_klp.py --config /root/suma_config.yaml --group api_group_test
 The script can attach source channels. '''))
 
 parser.add_argument("--config", help="Enter the config file name that contains login and channel information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("--group", help="Enter the group name for which systems of a group you want to change channels. e.g. testsystems",  required=False)
-parser.add_argument("--servername", help="Enter exact system name shown in SUSE Manager to deploy klp to it. e.g. mytestserver.example.com",  required=False)
 args = parser.parse_args()
 
 
@@ -67,20 +63,20 @@ def printdict(dict_object):
     print("----------------------------------------------------")
 
 def getpkg_servers_lists(mylist):
-    pkgname = "patterns-lp-lp_sles"
+    pkgname = "kernel-livepatch"
     temp_pkg_list = []
     temp_server_list = []
     for i in mylist:
         try:
-            temp_list = session.system.listLatestInstallablePackages(key, i)
+            temp_list = session.system.listLatestUpgradablePackages(key, i)
         except:
             print("failed to obtain pkg list from %s" %(i))
             continue
         
         for s in temp_list:
             if s['name'].startswith(pkgname):
-                print(s['name'], " : ", s['id'], " for systemid ", i)
-                temp_pkg_list.append(s['id'])
+                print(s['name'], " : ", s['to_package_id'], " for systemid ", i)
+                temp_pkg_list.append(s['to_package_id'])
                 temp_server_list.append(i)
     final_pkg_list = list(set(temp_pkg_list))
     final_server_list = list(set(temp_server_list))
@@ -93,7 +89,7 @@ def isNotBlank(myString):
     #myString is None OR myString is empty or blank
     return False
 
-def schedule_klp_install(suma_data, groupname):
+def schedule_klp_upgrade(suma_data, groupname):
     
     nowlater = datetime.datetime.now()
     earliest_occurrence = DateTime(nowlater)
@@ -102,7 +98,7 @@ def schedule_klp_install(suma_data, groupname):
     except Exception as e:
         print("get systems list from group failed. %s" %(e))
         exit(1)
-    print("Scheduling SUSE Live Patching initial rollout")
+    print("Scheduling SUSE Live Patching Upgrades.")
 
     server_id_list = []
     pkg_list = []
@@ -121,33 +117,6 @@ def schedule_klp_install(suma_data, groupname):
         print("Nothing to install. Either already installed or channels not available to the systems.")
     return "finished."
 
-def schedule_klp_install_single(suma_data, servername):
-    
-    nowlater = datetime.datetime.now()
-    earliest_occurrence = DateTime(nowlater)
-    try:
-        result_system_id = session.system.getId(key, servername)
-    except Exception as e:
-        print("get systems id failed. %s" %(e))
-        exit(1)
-    print("Scheduling SUSE Live Patching initial rollout to single node.")
-
-    server_id_list = []
-    pkg_list = []
-    for a in result_system_id:
-        server_id_list.append(a['id'])
-       
-    pkg_list, server_id_list = getpkg_servers_lists(server_id_list)
-    print(pkg_list, server_id_list)
-    if len(pkg_list) and len(server_id_list) > 0:
-        try:
-            result_job = session.system.schedulePackageInstall(key, server_id_list, pkg_list, earliest_occurrence, True)
-            print("Job ID: %s" %(result_job))
-        except Exception as e:
-            print("scheduling job failed %s." %(e))
-    else:
-        print("Nothing to install. Either already installed or channels not available to the systems.")
-    return "finished."
 
 if args.config:
     suma_data = get_login(args.config)
@@ -159,13 +128,10 @@ else:
 
 if isNotBlank(args.group):
     
-    result = schedule_klp_install(suma_data, args.group)
-    print(result)
-elif isNotBlank(args.servername):
-    result = schedule_klp_install_single(suma_data, args.servername)
+    result = schedule_klp_upgrade(suma_data, args.group)
     print(result)
 else:
-    print("group name is empty and also no single system name provided.")
+    print("group name is empty.")
     exit(1)
     
 suma_logout(session, key)
