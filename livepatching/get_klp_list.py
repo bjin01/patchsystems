@@ -16,14 +16,14 @@ class Password(argparse.Action):
 
 parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
-This scripts helps to attach source channels to clm project 
+This list live patching and send email. 
 Sample command:
-              python3 deploy_klp.py --config /root/suma_config.yaml --group api_group_test
-              python3 deploy_klp.py --config /root/suma_config.yaml --servername mytestserver.example.com
+              python3 get_klp_list.py --config /root/suma_config.yaml --list_klp --email bo.jin@jinbo01.com
 The script deployes klp. '''))
 parser.add_argument("--servername", help="Enter exact system name shown in SUSE Manager to deploy klp to it. e.g. mytestserver.example.com",  required=False)
 parser.add_argument("--list_klp", action="store_true")
 parser.add_argument("--config", help="Enter the config file name that contains login and channel information e.g. /root/suma_config.yaml",  required=False)
+parser.add_argument("--email", help="Enter email address you want to send list of live patching overview to",  required=False)
 parser.add_argument("--group", help="Enter the group name for which systems of a group you want to change channels. e.g. testsystems",  required=False)
 
 args = parser.parse_args()
@@ -197,7 +197,6 @@ def send_email(email_addr):
     proc2 = subprocess.run(cmd2, input=proc1.stdout)
     return
 
-email_addr="bo.jin@jinbo01.com"
 if args.config:
     suma_data = get_login(args.config)
     session, key = login_suma(suma_data)
@@ -214,7 +213,7 @@ elif isNotBlank(args.servername):
     print(result)
 elif args.list_klp:
     list_klp(suma_data)
-    send_email(email_addr)
+    send_email(args.email)
 else:
     print("group name is empty and also no single system name provided.")
     exit(1)
