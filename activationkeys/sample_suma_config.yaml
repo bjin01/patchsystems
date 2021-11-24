@@ -1,0 +1,6 @@
+suma_host: bjsuma.bo2go.home
+suma_user: bjin
+suma_password: suse1234
+activationkeys:
+  - mytest-project: sle-product-sles15-sp1-pool-x86_64 
+  - main: sle-product-sles_sap15-sp1-pool-x86_64
