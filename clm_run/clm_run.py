@@ -108,13 +108,56 @@ def listEnvironment(key, projectLabel):
         print("no projectEnvironments found")
         return False
 
+def isNotBlank(myString):
+    if myString and myString.strip():
+        #myString is not None AND myString is not empty or blank
+        return True
+    #myString is None OR myString is empty or blank
+    return False
+
 def check_env_status(key,  projLabel,  *args):
+    lookup_projenv_return = session.contentmanagement.listProjectEnvironments(key, projLabel)
+    ok = True
+    mystatus = ["built", "unkown"]
+    for a in lookup_projenv_return:
+        for h, i in a.items():
+            
+            if h == "status":
+                if not i.find(mystatus[0]) and not i.find(mystatus[1]):
+                    print("%s: work progress: %s" %(a['name'], i))
+                    ok = False
+                    break
+    
+    if not ok:
+        print("")
+        print("environments in progress, a new build or promote not possible")
+        exit(1)
+
+    
+    """ try:
+        lookup_projenv_return = session.contentmanagement.listProjectEnvironments(key, projLabel)
+        ok = True
+        for a in lookup_projenv_return:
+            for h, i in a.items():
+                if h == "status":
+                    if i != "built" or i != None or i != "":
+                        print("project environment in working projegress: %s" %(i))
+                        ok = False
+        
+        if not ok:
+            print("")
+            print("environments in progress, a new build or promote not possible")
+            exit(1)
+    except:
+        print("project environment lookup failed. %s Exit." %projLabel)
+        exit(1) """
+
     if not args:
         envLabel = ''
     else:
         for a in args:
             envLabel = a
-    if envLabel == '':
+    if not isNotBlank(envLabel):
         lookup_proj_return = session.contentmanagement.lookupProject(key, projLabel)
         for k,  v in lookup_proj_return.items():
             if k in 'firstEnvironment':
@@ -125,6 +168,7 @@ def check_env_status(key,  projLabel,  *args):
                 #print("lets see k %s, v is: %s" %(k, v))
                 if k == "status":
                     for s in status_text:
+                        #print(s)
                         if s in v:
                             print("%s: %s is %s" %(projLabel, envLabel, s))
                             break
@@ -141,9 +185,24 @@ def check_env_status(key,  projLabel,  *args):
             print("check_env_status failed. Exit with error")
             exit(1)
     return
-        
+
+def lookupProject(key, projLabel):
+    try:
+        session.contentmanagement.lookupProject(key, projLabel)
+        return True
+    except:
+        print("Project label does not exist: %s" %projLabel)
+        return False
+    
+
+
 def buildproject(key,  projLabel):
-    buildresult = session.contentmanagement.buildProject(key, projLabel)
+    result_lookup_project = lookupProject(key, projLabel)
+    buildresult = 0
+    if result_lookup_project:
+        check_env_status(key, projLabel)
+        buildresult = session.contentmanagement.buildProject(key, projLabel)
+
     if buildresult == 1:
             print("Build %s task: Successful"  %(projLabel))
             print("sleep 5 seconds")
@@ -156,18 +215,20 @@ def buildproject(key,  projLabel):
     return buildresult
 
 def promoteenvironment(key,  projLabel,  envLabel):
-    try:
-        nextenvironment = session.contentmanagement.listProjectEnvironments(key, projLabel)
-    except Exception as ex:
-        print("not found %s" %ex)
-        print("lookup project and environment label failed. exit.")
-        exit(1)
+    result_lookup_project = lookupProject(key, projLabel)
+    if result_lookup_project:
+        try:
+            nextenvironment = session.contentmanagement.listProjectEnvironments(key, projLabel)
+        except Exception as ex:
+            print("not found %s" %ex)
+            print("lookup project and environment label failed. exit.")
+            exit(1)
     
-    for i in nextenvironment:
-        if i['label'] == envLabel:
-            nextLabel = i['nextEnvironmentLabel']
-            check_env_status(key,  projLabel, nextLabel)
-            break
+        for i in nextenvironment:
+            if i['label'] == envLabel:
+                nextLabel = i['nextEnvironmentLabel']
+                check_env_status(key,  projLabel, nextLabel)
+                break
    
     try:
         promote_result = session.contentmanagement.promoteProject(key, projLabel,  envLabel)
