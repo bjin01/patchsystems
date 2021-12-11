@@ -5,7 +5,19 @@ import datetime
 import yaml
 import os
 from xmlrpc.client import ServerProxy, Error, DateTime
+import logging
 
+mylogs = logging.getLogger(__name__)
+mylogs.setLevel(logging.DEBUG)
+
+file = logging.FileHandler("/var/log/klp_deploy.log")
+file.setLevel(logging.DEBUG)
+fileformat = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
+file.setFormatter(fileformat)
+
+mylogs.addHandler(file)
+
+# And all that demo test code below this
 class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
         if values is None:
@@ -73,11 +85,14 @@ def getpkg_servers_lists(mylist):
             temp_list = session.system.listLatestInstallablePackages(key, i)
         except:
             print("failed to obtain pkg list from %s" %(i))
+            mylogs.error("failed to obtain pkg list from %s" %(i))
             continue
         
         for s in temp_list:
+            
             if s['name'].startswith(pkgname):
                 print(s['name'], " : ", s['id'], " for systemid ", i)
+                mylogs.info(s['name'], " : ", s['id'], " for systemid ", i)
                 temp_pkg_list.append(s['id'])
                 temp_server_list.append(i)
     final_pkg_list = list(set(temp_pkg_list))
@@ -99,8 +114,10 @@ def schedule_klp_install(suma_data, groupname):
         result_systemlist = session.systemgroup.listSystemsMinimal(key, groupname)
     except Exception as e:
         print("get systems list from group failed. %s" %(e))
+        mylogs.error("get systems list from group failed. %s" %(e))
         exit(1)
     print("Scheduling SUSE Live Patching initial rollout")
+    mylogs.info("Scheduling SUSE Live Patching initial rollout")
 
     server_id_list = []
     pkg_list = []
@@ -113,10 +130,13 @@ def schedule_klp_install(suma_data, groupname):
         try:
             result_job = session.system.schedulePackageInstall(key, server_id_list, pkg_list, earliest_occurrence, True)
             print("Job ID: %s" %(result_job))
+            mylogs.info("Job ID: %s" %(result_job))
         except Exception as e:
             print("scheduling job failed %s." %(e))
+            mylogs.error("scheduling job failed %s." %(e))
     else:
         print("Nothing to install. Either already installed or channels not available to the systems.")
+        mylogs.info("Nothing to install. Either already installed or channels not available to the systems.")
     return "finished."
 
 def schedule_klp_install_single(suma_data, servername):
@@ -127,8 +147,10 @@ def schedule_klp_install_single(suma_data, servername):
         result_system_id = session.system.getId(key, servername)
     except Exception as e:
         print("get systems id failed. %s" %(e))
+        mylogs.error("get systems id failed. %s" %(e))
         exit(1)
     print("Scheduling SUSE Live Patching initial rollout to single node.")
+    mylogs.info("Scheduling SUSE Live Patching initial rollout to single node.")
 
     server_id_list = []
     pkg_list = []
@@ -141,10 +163,13 @@ def schedule_klp_install_single(suma_data, servername):
         try:
             result_job = session.system.schedulePackageInstall(key, server_id_list, pkg_list, earliest_occurrence, True)
             print("Job ID: %s" %(result_job))
+            mylogs.info("Job ID: %s" %(result_job))
         except Exception as e:
             print("scheduling job failed %s." %(e))
+            mylogs.error("scheduling job failed %s." %(e))
     else:
         print("Nothing to install. Either already installed or channels not available to the systems.")
+        mylogs.info("Nothing to install. Either already installed or channels not available to the systems.")
     return "finished."
 
 if args.config:
@@ -163,6 +188,7 @@ elif isNotBlank(args.servername):
     print(result)
 else:
     print("group name is empty and also no single system name provided.")
+    mylogs.error("group name is empty and also no single system name provided.")
     exit(1)
     
 suma_logout(session, key)

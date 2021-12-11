@@ -1,6 +1,7 @@
 suma_host: bjsuma.bo2go.home
 suma_user: bjin
 suma_password: suse1234
+notify_email: bo.jin@suse.com
 domain: RCCAD
 groups:
   susemanager: admin
