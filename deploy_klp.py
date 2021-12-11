@@ -79,13 +79,10 @@ def get_login(path):
     return login
 
 def login_suma(login):
-    MANAGER_URL = "https://"+ login['suma_host'] +"/rpc/api"
     MANAGER_LOGIN = login['suma_user']
     MANAGER_PASSWORD = login['suma_password']
-    SUMA = "http://" + login['suma_user'] + ":" + login['suma_password'] + "@" + login['suma_host'] + "/rpc/api"
+    SUMA = "https://" + login['suma_user'] + ":" + login['suma_password'] + "@" + login['suma_host'] + "/rpc/api"
     with ServerProxy(SUMA) as session_client:
-
-    #session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
         session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
     return session_client, session_key
 
