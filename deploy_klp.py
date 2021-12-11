@@ -1,21 +1,38 @@
 #!/usr/bin/python
 
-import argparse,  getpass,  textwrap, time
+import subprocess
+import argparse
+import getpass
+import textwrap
+import time
 import datetime
 import yaml
 import os
 from xmlrpc.client import ServerProxy, Error, DateTime
 import logging
+import shutil
+from os import access, R_OK
+from os.path import isfile
 
+
+logfilename = "/var/log/klp_deploy.log"
 mylogs = logging.getLogger(__name__)
 mylogs.setLevel(logging.DEBUG)
-
-file = logging.FileHandler("/var/log/klp_deploy.log")
+#file handler adding here, log file should be overwritten every time as this will be sent via email
+file = logging.FileHandler(logfilename, mode='w')
 file.setLevel(logging.DEBUG)
+
 fileformat = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
 file.setFormatter(fileformat)
 
+#handler for sending messages to console stdout
+stream = logging.StreamHandler()
+streamformat = logging.Formatter("%(asctime)s:%(filename)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
+stream.setLevel(logging.DEBUG)
+stream.setFormatter(streamformat)
+
 mylogs.addHandler(file)
+mylogs.addHandler(stream)
 
 # And all that demo test code below this
 class Password(argparse.Action):
@@ -27,14 +44,25 @@ class Password(argparse.Action):
 
 parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
-This scripts helps to attach source channels to clm project 
+This is SUSE Live Patching initial deployment tool:
+You need a suma_config.yaml file with login and email notification address.
+If email notification will be used then you need to have mutt email client installed. 
+
+Sample suma_config.yaml:
+suma_host: mysumaserver.mydomain.local
+suma_user: <USERNAME>
+suma_password: <PASSWORD>
+notify_email: <EMAIL_ADDRESS>
+
+
 Sample command:
               python3 deploy_klp.py --config /root/suma_config.yaml --group api_group_test
               python3 deploy_klp.py --config /root/suma_config.yaml --servername mytestserver.example.com
+              python3 deploy_klp.py --config /root/suma_config.yaml --servername mytestserver.example.com --email
 The script deployes klp. '''))
-parser.add_argument("--servername", help="Enter exact system name shown in SUSE Manager to deploy klp to it. e.g. mytestserver.example.com",  required=False)
 parser.add_argument("--config", help="Enter the config file name that contains login and channel information e.g. /root/suma_config.yaml",  required=False)
-parser.add_argument("--group", help="Enter the group name for which systems of a group you want to change channels. e.g. testsystems",  required=False)
+parser.add_argument("--group", help="Enter a group name as target.",  required=False)
+parser.add_argument("--email", help="use this option if you want email notifcation, the log file will be sent to it. The email address is provided in the suma_config.yaml",  action="store_true")
 
 args = parser.parse_args()
 
@@ -65,8 +93,27 @@ def suma_logout(session, key):
     session.auth.logout(key)
     return
 
+def result2email():
+    if args.email:
+        assert isfile(logfilename) and access(logfilename, R_OK), \
+        "File {} doesn't exist or isn't readable".format(logfilename)
+        email_client_name = "mutt"
+        path_to_cmd = shutil.which(email_client_name)    
+        if path_to_cmd is None:
+            mylogs.error(f"mutt email client is not installed.")
+        else:
+            mylogs.info("Sending log %s via email to %s" %(logfilename, suma_data["notify_email"]))
+            subject = "SUSE Manager - Live Patching Deployment logs."
+            cmd1 = ['cat', logfilename]
+            proc1 = subprocess.run(cmd1, stdout=subprocess.PIPE)
+            cmd2 = [email_client_name, '-s', subject, suma_data["notify_email"]]
+            proc2 = subprocess.run(cmd2, input=proc1.stdout)
+    else:
+        mylogs.info("Not sending email.")
+    return
+
 def printdict(dict_object):
-    print("Item---------------------------------------------")
+    mylogs.info("Item---------------------------------------------")
     for a, b in dict_object.items():
         if isinstance(b, dict):
             for k, v in b.items():
@@ -74,25 +121,24 @@ def printdict(dict_object):
         else:
             print("{:<20}".format(a), "{:<20}".format(b))
         
-    print("----------------------------------------------------")
+    mylogs.info("----------------------------------------------------")
+
 
 def getpkg_servers_lists(mylist):
     pkgname = "patterns-lp-lp_sles"
     temp_pkg_list = []
     temp_server_list = []
-    for i in mylist:
+    for i,j in mylist.items():
         try:
             temp_list = session.system.listLatestInstallablePackages(key, i)
         except:
-            print("failed to obtain pkg list from %s" %(i))
-            mylogs.error("failed to obtain pkg list from %s" %(i))
+            mylogs.error("failed to obtain pkg list from %s" %(j))
             continue
         
         for s in temp_list:
             
             if s['name'].startswith(pkgname):
-                print(s['name'], " : ", s['id'], " for systemid ", i)
-                mylogs.info(s['name'], " : ", s['id'], " for systemid ", i)
+                mylogs.info("%s: %s for system: %s will be installed."%(s['name'], s['id'], j))
                 temp_pkg_list.append(s['id'])
                 temp_server_list.append(i)
     final_pkg_list = list(set(temp_pkg_list))
@@ -113,29 +159,25 @@ def schedule_klp_install(suma_data, groupname):
     try:
         result_systemlist = session.systemgroup.listSystemsMinimal(key, groupname)
     except Exception as e:
-        print("get systems list from group failed. %s" %(e))
         mylogs.error("get systems list from group failed. %s" %(e))
+        result2email()
         exit(1)
-    print("Scheduling SUSE Live Patching initial rollout")
     mylogs.info("Scheduling SUSE Live Patching initial rollout")
 
-    server_id_list = []
+    server_list = {}
     pkg_list = []
     for a in result_systemlist:
-        server_id_list.append(a['id'])
+        server_list[a['id']] = a['name']
        
-    pkg_list, server_id_list = getpkg_servers_lists(server_id_list)
-    print(pkg_list, server_id_list)
+    pkg_list, server_id_list = getpkg_servers_lists(server_list)
+    mylogs.debug("Package list id: %s, Server list id %s"%(pkg_list, server_id_list))
     if len(pkg_list) and len(server_id_list) > 0:
         try:
             result_job = session.system.schedulePackageInstall(key, server_id_list, pkg_list, earliest_occurrence, True)
-            print("Job ID: %s" %(result_job))
             mylogs.info("Job ID: %s" %(result_job))
         except Exception as e:
-            print("scheduling job failed %s." %(e))
             mylogs.error("scheduling job failed %s." %(e))
     else:
-        print("Nothing to install. Either already installed or channels not available to the systems.")
         mylogs.info("Nothing to install. Either already installed or channels not available to the systems.")
     return "finished."
 
@@ -146,10 +188,9 @@ def schedule_klp_install_single(suma_data, servername):
     try:
         result_system_id = session.system.getId(key, servername)
     except Exception as e:
-        print("get systems id failed. %s" %(e))
         mylogs.error("get systems id failed. %s" %(e))
+        result2email()
         exit(1)
-    print("Scheduling SUSE Live Patching initial rollout to single node.")
     mylogs.info("Scheduling SUSE Live Patching initial rollout to single node.")
 
     server_id_list = []
@@ -158,17 +199,14 @@ def schedule_klp_install_single(suma_data, servername):
         server_id_list.append(a['id'])
        
     pkg_list, server_id_list = getpkg_servers_lists(server_id_list)
-    print(pkg_list, server_id_list)
+    mylogs.debug(pkg_list, server_id_list)
     if len(pkg_list) and len(server_id_list) > 0:
         try:
             result_job = session.system.schedulePackageInstall(key, server_id_list, pkg_list, earliest_occurrence, True)
-            print("Job ID: %s" %(result_job))
             mylogs.info("Job ID: %s" %(result_job))
         except Exception as e:
-            print("scheduling job failed %s." %(e))
             mylogs.error("scheduling job failed %s." %(e))
     else:
-        print("Nothing to install. Either already installed or channels not available to the systems.")
         mylogs.info("Nothing to install. Either already installed or channels not available to the systems.")
     return "finished."
 
@@ -182,13 +220,14 @@ else:
 
 if isNotBlank(args.group):
     result = schedule_klp_install(suma_data, args.group)
-    print(result)
+    mylogs.info(result)
 elif isNotBlank(args.servername):
     result = schedule_klp_install_single(suma_data, args.servername)
-    print(result)
+    mylogs.info(result)
 else:
-    print("group name is empty and also no single system name provided.")
     mylogs.error("group name is empty and also no single system name provided.")
+    result2email()
     exit(1)
     
 suma_logout(session, key)
+result2email()
