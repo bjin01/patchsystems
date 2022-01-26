@@ -55,11 +55,11 @@ suma_password: <PASSWORD>
 notify_email: <EMAIL_ADDRESS>
 
 Sample command:
-              python3 rebootsystems.py --config /root/suma_config.yaml --systemname mytestsystem.domain.local
+              python3.6 rebootsystems.py --config suma_config.yaml --systemname mytestsystem.domain.local
               
               or 
 
-              python3 rebootsystems.py --config /root/suma_config.yaml --systemname mytestsystem.domain.local --email
+              python3.6 rebootsystems.py --config suma_config.yaml --systemname mytestsystem.domain.local --email
 '''))
 
 parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
@@ -148,35 +148,29 @@ def reboot_host(systemname):
     nowlater = datetime.datetime.now()
     earliest_occurrence = DateTime(nowlater)
     try:
-        result_systemid = session.system.getId(key, systemname)
+        result_rebootsystems = session.system.listSuggestedReboot(key)
     except Exception as e:
-        mylogs.error("get systems id failed. %s" %(e))
+        mylogs.error("get list of reboot needed systems failed. %s" %(e))
         result2email()
         exit(1)
-    mylogs.info("Systems is found.")
+    mylogs.info("Reboot system list found.")
 
-    if result_systemid:
-        try:
-            temp_list = session.system.getRelevantErrata(key, result_systemid[0]['id'])
-            mylogs.info("Host: %s    %d patches." %(systemname, len(temp_list)))
-        except:
-            mylogs.error("failed to obtain patch list from %s" %(systemname))
-        if len(temp_list) > 0:
-            patch_list = []
-            server_id_list = []
-            for p in temp_list:
-                patch_list.append(p['id'])
-            try:
-                server_id_list.append(result_systemid[0]['id'])
-                result_job = session.system.scheduleApplyErrata(key, server_id_list, patch_list, earliest_occurrence, True, True)
-                mylogs.info("Jobs created %s" %(result_job[0]))
-                print("Patch Job:")
-                print("%s: %s" %(systemname, result_job[0]))
-            except Exception as e:
-                mylogs.error("scheduling job failed %s." %(e))
+    if result_rebootsystems:
+        if len(result_rebootsystems) > 0:
+            
+            for p in result_rebootsystems:
+                if p['name'] in systemname:
+                    try:
+                        
+                        result_job = session.system.scheduleReboot(key, p['id'], earliest_occurrence)
+                        mylogs.info("Reboot Jobs created %s" %(result_job))
+                        print("Reboot Job:")
+                        print("%s: %s" %(systemname, result_job))
+                    except Exception as e:
+                        mylogs.error("scheduling job failed %s." %(e))
         else:
-            print("Nothing to do.")
-            mylogs.info("Nothing to install. Either already installed or channels not available to the systems.")
+            print("No system needs reboot.")
+            mylogs.info("Nothing to reboot.")
     return "finished."
 
 

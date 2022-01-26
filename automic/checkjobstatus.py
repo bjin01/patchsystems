@@ -55,11 +55,11 @@ suma_password: <PASSWORD>
 notify_email: <EMAIL_ADDRESS>
 
 Sample command:
-              python3 checkjobstatus.py --config /root/suma_config.yaml --jobid 12345
+              python3.6 checkjobstatus.py --config suma_config.yaml --jobid 12345
               
               or 
 
-              python3 checkjobstatus.py --config /root/suma_config.yaml --jobid 12345 --email
+              python3.6 checkjobstatus.py --config suma_config.yaml --jobid 12345 --email
 '''))
 
 parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)

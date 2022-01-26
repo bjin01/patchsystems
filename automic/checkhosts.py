@@ -55,12 +55,15 @@ suma_password: <PASSWORD>
 notify_email: <EMAIL_ADDRESS>
 
 Sample command:
-              python3 checkhosts.py --config /root/suma_config.yaml --group api_group_test
-              python3 checkhosts.py --config /root/suma_config.yaml --group api_group_test
-The script helps to list hosts and if there are patches to be installed of a given group and send email notifications optionally.'''))
+              python3.6 checkhosts.py --config /root/suma_config.yaml --group api_group_test
+
+              or 
+
+              python3.6 checkhosts.py --config /root/suma_config.yaml --group api_group_test
+The script lists hosts and if there are patches to be installed of a given group and send email notifications optionally.'''))
 
 parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
-parser.add_argument("--group", help="Enter the group name for which systems of a group you want to install live kernel patches.",  required=False)
+parser.add_argument("--group", help="Enter the group name that you want to check.",  required=False)
 parser.add_argument("--email", help="use this option if you want email notifcation, the log file will be sent to it. The email address is provided in the suma_config.yaml",  action="store_true")
 args = parser.parse_args()
 
