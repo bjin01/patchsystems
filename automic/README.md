@@ -48,11 +48,16 @@ __Step 4:__
 ```
 python3.6 rebootsystems.py --config suma_config.yaml --systemname caasp01.bo2go.home
 Reboot Job:
-caasp01.bo2go.home: 12289
+caasp01.bo2go.home: 12293
 ```
 
 __Step 5:__
     * After reboot job reached a final state, either failed or completed then automic finished the patching workflow.
+```
+python3 checkjobstatus.py --config suma_config.yaml --jobid 12293
+System reboot: 12292: inprogress
+```
+   
 
 
 ## Logs:

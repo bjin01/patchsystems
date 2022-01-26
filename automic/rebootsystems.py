@@ -32,7 +32,7 @@ stream.setLevel(logging.DEBUG)
 stream.setFormatter(streamformat)
 
 mylogs.addHandler(file)
-mylogs.addHandler(stream)
+#mylogs.addHandler(stream)
 
 """ class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
