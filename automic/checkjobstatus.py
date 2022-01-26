@@ -32,7 +32,7 @@ stream.setLevel(logging.DEBUG)
 stream.setFormatter(streamformat)
 
 mylogs.addHandler(file)
-mylogs.addHandler(stream)
+#mylogs.addHandler(stream)
 
 """ class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -157,6 +157,9 @@ def jobstatus(jobid):
             for p in result_inprogress_actions:
                if p['id'] == int(jobid):
                    mylogs.info("Job %d is in-progress, Job Name: %s" %(int(jobid), p['name']))
+                   print("%s: %d: inprogress" %(p['type'], int(jobid)))
+                   return "Job inprogress"
+                   
 
     if result_failed_actions:
         if len(result_failed_actions) > 0:
@@ -164,6 +167,9 @@ def jobstatus(jobid):
             for p in result_failed_actions:
                if p['id'] == int(jobid):
                    mylogs.info("Job %d is failed, Job Name: %s" %(int(jobid), p['name']))
+                   print("%s: %d: failed" %(p['type'], int(jobid)))
+                   return "Job failed"
+                   
 
     if result_completed_actions:
         if len(result_completed_actions) > 0:
@@ -171,6 +177,9 @@ def jobstatus(jobid):
             for p in result_completed_actions:
                if p['id'] == int(jobid):
                    mylogs.info("Job %d is completed, Job Name: %s" %(int(jobid), p['name']))
+                   print("%s: %d: completed" %(p['type'], int(jobid)))
+                   return "Job completed"
+                   
 
     return "finished."
 
@@ -184,7 +193,6 @@ else:
     session, key = login_suma(suma_data)
 
 if isNotBlank(args.jobid):
-    print("%s" %args.jobid)
     result = jobstatus(args.jobid)
     mylogs.info(result)
 else:
