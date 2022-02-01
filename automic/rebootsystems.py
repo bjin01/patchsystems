@@ -15,7 +15,7 @@ from os import access, R_OK
 from os.path import isfile
 
 
-logfilename = "/var/log/automic_suma_rebootsystems.log"
+logfilename = "/opt/Automic/susemanager/logs/automic_suma_rebootsystems.log"
 mylogs = logging.getLogger(__name__)
 mylogs.setLevel(logging.DEBUG)
 #file handler adding here, log file should be overwritten every time as this will be sent via email
