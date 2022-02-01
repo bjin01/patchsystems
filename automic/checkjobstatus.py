@@ -6,6 +6,7 @@ import argparse
 import textwrap
 #import time
 import datetime
+import time
 import yaml
 import os
 from xmlrpc.client import ServerProxy, DateTime
@@ -129,59 +130,69 @@ def isNotBlank(myString):
 
 def jobstatus(jobid):
     
+    if suma_data['job_timeout']:
+        timeout = suma_data['job_timeout'] * 60
+    else:
+        timeout = 10
+    timeout_start = time.time()
+
     nowlater = datetime.datetime.now()
     earliest_occurrence = DateTime(nowlater)
-    try:
-        result_inprogress_actions = session.schedule.listInProgressActions(key)
-    except Exception as e:
-        mylogs.error("get inProgress Actions failed. %s" %(e))
-        exit(1)
+    while time.time() < timeout_start + timeout:
+        try:
+            result_inprogress_actions = session.schedule.listInProgressActions(key)
+        except Exception as e:
+            mylogs.error("get inProgress Actions failed. %s" %(e))
+            exit(1)
+        
+        try:
+            result_failed_actions = session.schedule.listFailedActions(key)
+        except Exception as e:
+            mylogs.error("get result_failed_actions Actions failed. %s" %(e))
+            exit(1)
+        
+        try:
+            result_completed_actions = session.schedule.listAllCompletedActions(key)
+        except Exception as e:
+            mylogs.error("get result_completed_actions Actions failed. %s" %(e))
+            exit(1)
+
+        mylogs.info("Job Status collected.")
+
     
-    try:
-        result_failed_actions = session.schedule.listFailedActions(key)
-    except Exception as e:
-        mylogs.error("get result_failed_actions Actions failed. %s" %(e))
-        exit(1)
+        if result_inprogress_actions:
+            if len(result_inprogress_actions) > 0:
+                
+                for p in result_inprogress_actions:
+                    if p['id'] == int(jobid):
+                        mylogs.info("Job %d is in-progress, Job Name: %s" %(int(jobid), p['name']))
+                        #print("%s: %d: inprogress" %(p['type'], int(jobid)))
+                        continue
+                    
+
+        if result_failed_actions:
+            if len(result_failed_actions) > 0:
+                
+                for p in result_failed_actions:
+                    if p['id'] == int(jobid):
+                        mylogs.info("Job %d is failed, Job Name: %s" %(int(jobid), p['name']))
+                        #print("%s: %d: failed" %(p['type'], int(jobid)))
+                        return "failed"
+                    
+
+        if result_completed_actions:
+            if len(result_completed_actions) > 0:
+                
+                for p in result_completed_actions:
+                    if p['id'] == int(jobid):
+                        mylogs.info("Job %d is completed, Job Name: %s" %(int(jobid), p['name']))
+                        #print("%s: %d: completed" %(p['type'], int(jobid)))
+                        return "completed"
+        
+        time.sleep(120)
+                   
+
     
-    try:
-        result_completed_actions = session.schedule.listAllCompletedActions(key)
-    except Exception as e:
-        mylogs.error("get result_completed_actions Actions failed. %s" %(e))
-        exit(1)
-
-    mylogs.info("Job Status collected.")
-
-    if result_inprogress_actions:
-        if len(result_inprogress_actions) > 0:
-            
-            for p in result_inprogress_actions:
-               if p['id'] == int(jobid):
-                   mylogs.info("Job %d is in-progress, Job Name: %s" %(int(jobid), p['name']))
-                   print("%s: %d: inprogress" %(p['type'], int(jobid)))
-                   return "Job inprogress"
-                   
-
-    if result_failed_actions:
-        if len(result_failed_actions) > 0:
-            
-            for p in result_failed_actions:
-               if p['id'] == int(jobid):
-                   mylogs.info("Job %d is failed, Job Name: %s" %(int(jobid), p['name']))
-                   print("%s: %d: failed" %(p['type'], int(jobid)))
-                   return "Job failed"
-                   
-
-    if result_completed_actions:
-        if len(result_completed_actions) > 0:
-            
-            for p in result_completed_actions:
-               if p['id'] == int(jobid):
-                   mylogs.info("Job %d is completed, Job Name: %s" %(int(jobid), p['name']))
-                   print("%s: %d: completed" %(p['type'], int(jobid)))
-                   return "Job completed"
-                   
-
-    return "finished."
 
 
 if args.config:
@@ -195,6 +206,7 @@ else:
 if isNotBlank(args.jobid):
     result = jobstatus(args.jobid)
     mylogs.info(result)
+    print("%s" % result)
 else:
     mylogs.info("systemname name is empty.")
     result2email()
