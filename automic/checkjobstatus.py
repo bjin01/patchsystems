@@ -177,7 +177,7 @@ def jobstatus(jobid):
                     if p['id'] == int(jobid):
                         mylogs.info("Job %d is failed, Job Name: %s" %(int(jobid), p['name']))
                         #print("%s: %d: failed" %(p['type'], int(jobid)))
-                        return "failed"
+                        return f"{p['type']}: {jobid}: failed"
                     
 
         if result_completed_actions:
@@ -187,7 +187,7 @@ def jobstatus(jobid):
                     if p['id'] == int(jobid):
                         mylogs.info("Job %d is completed, Job Name: %s" %(int(jobid), p['name']))
                         #print("%s: %d: completed" %(p['type'], int(jobid)))
-                        return "completed"
+                        return f"{p['type']}: {jobid}: completed"
         
         time.sleep(120)
     return "timeout"
