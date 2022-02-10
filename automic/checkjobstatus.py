@@ -190,7 +190,7 @@ def jobstatus(jobid):
                         return f"{p['type']}: {jobid}: completed"
         
         time.sleep(120)
-    return "timeout"
+    return f"{p['type']}: {jobid}: timeout"
 
 if args.config:
     suma_data = get_login(args.config)
