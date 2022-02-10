@@ -3,4 +3,4 @@ suma_user: bjin
 suma_password: suse1234
 notify_email: test@yourdomainxyz.org
 # job timeout in minutes:
-job_timeout: 5
+job_timeout: 2

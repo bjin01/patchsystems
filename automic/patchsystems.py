@@ -19,10 +19,10 @@ logfilename = "/opt/Automic/susemanager/logs/automic_suma_patchsystems.log"
 mylogs = logging.getLogger(__name__)
 mylogs.setLevel(logging.DEBUG)
 #file handler adding here, log file should be overwritten every time as this will be sent via email
-file = logging.FileHandler(logfilename, mode='w')
+file = logging.FileHandler(logfilename, mode='a+')
 file.setLevel(logging.DEBUG)
 
-fileformat = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
+fileformat = logging.Formatter("%(asctime)s:[pid %(process)d]:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
 file.setFormatter(fileformat)
 
 #handler for sending messages to console stdout

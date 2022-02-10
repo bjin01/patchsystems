@@ -19,20 +19,20 @@ logfilename = "/opt/Automic/susemanager/logs/automic_suma_checkhosts.log"
 mylogs = logging.getLogger(__name__)
 mylogs.setLevel(logging.DEBUG)
 #file handler adding here, log file should be overwritten every time as this will be sent via email
-file = logging.FileHandler(logfilename, mode='w')
+file = logging.FileHandler(logfilename, mode='a+')
 file.setLevel(logging.DEBUG)
 
-fileformat = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
+fileformat = logging.Formatter("%(asctime)s:[pid %(process)d]:%(levelname)s: - %(message)s",datefmt="%H:%M:%S")
 file.setFormatter(fileformat)
 
 #handler for sending messages to console stdout
 stream = logging.StreamHandler()
-streamformat = logging.Formatter("%(asctime)s:%(filename)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
+streamformat = logging.Formatter("%(asctime)s:[pid %(process)d]:%(filename)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
 stream.setLevel(logging.DEBUG)
 stream.setFormatter(streamformat)
 
 mylogs.addHandler(file)
-#mylogs.addHandler(stream)
+mylogs.addHandler(stream)
 
 """ class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
