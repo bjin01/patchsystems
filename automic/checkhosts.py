@@ -29,7 +29,7 @@ file.setFormatter(fileformat)
 stream = logging.StreamHandler()
 streamformat = logging.Formatter("%(asctime)s:[pid %(process)d]:%(filename)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
 stream.setLevel(logging.DEBUG)
-stream.setFormatter(streamformat)
+#stream.setFormatter(streamformat)
 
 mylogs.addHandler(file)
 mylogs.addHandler(stream)
