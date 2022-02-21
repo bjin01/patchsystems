@@ -32,7 +32,7 @@ stream.setLevel(logging.DEBUG)
 #stream.setFormatter(streamformat)
 
 mylogs.addHandler(file)
-mylogs.addHandler(stream)
+#mylogs.addHandler(stream)
 
 """ class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -64,6 +64,7 @@ The script lists hosts and if there are patches to be installed of a given group
 
 parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("--group", help="Enter the group name that you want to check.",  required=False)
+parser.add_argument("--systemname", help="Enter the minion id that you want to check.",  required=False)
 parser.add_argument("--email", help="use this option if you want email notifcation, the log file will be sent to it. The email address is provided in the suma_config.yaml",  action="store_true")
 args = parser.parse_args()
 
@@ -119,6 +120,27 @@ def printdict(dict_object):
             print("{:<20}".format(a), "{:<20}".format(b))
         
     mylogs.info("----------------------------------------------------")
+
+def get_single_server_patches(systemname):
+    patch_list = {}
+    try:
+        result_system = session.system.getId(key, systemname)
+    except Exception as e:
+        mylogs.error("get systems list from group failed. %s" %(e))
+        result2email()
+        exit(1)
+    try:
+        temp_list = session.system.getRelevantErrata(key, result_system[0]['id'])
+        #mylogs.info("Host: %s  %d patches." %(j, len(temp_list)))
+    except:
+        mylogs.error("failed to obtain patch list from %s" %(systemname))
+
+    if temp_list:
+        patch_list[systemname] = len(temp_list)
+        print("%s: %d" %(systemname, patch_list[systemname]))
+        
+    return patch_list
+
 
 def get_servers_patches(mylist):
 
@@ -180,6 +202,9 @@ else:
 if isNotBlank(args.group):
     
     result = get_hosts(args.group)
+    mylogs.info(result)
+elif isNotBlank(args.systemname):
+    result = get_single_server_patches(args.systemname)
     mylogs.info(result)
 else:
     mylogs.info("group name is empty.")
