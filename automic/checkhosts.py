@@ -138,6 +138,8 @@ def get_single_server_patches(systemname):
     if temp_list:
         patch_list[systemname] = len(temp_list)
         print("%s: %d" %(systemname, patch_list[systemname]))
+    else:
+        print("%s: %d" %(systemname, 0))
         
     return patch_list
 
