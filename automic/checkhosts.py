@@ -66,6 +66,7 @@ parser.add_argument("--config", help="enter the config file name that contains l
 parser.add_argument("--group", help="Enter the group name that you want to check.",  required=False)
 parser.add_argument("--systemname", help="Enter the minion id that you want to check.",  required=False)
 parser.add_argument("--email", help="use this option if you want email notifcation, the log file will be sent to it. The email address is provided in the suma_config.yaml",  action="store_true")
+parser.add_argument("--headerOff", help="The stdout will not show the header line.",  action="store_true")
 args = parser.parse_args()
 
 def get_login(path):
@@ -133,11 +134,14 @@ def get_single_server_patches(systemname):
         temp_list = session.system.getRelevantErrata(key, result_system[0]['id'])
         #mylogs.info("Host: %s  %d patches." %(j, len(temp_list)))
     except:
+        temp_list = None
         mylogs.error("failed to obtain patch list from %s" %(systemname))
 
-    if temp_list:
+    if temp_list is not None:
         patch_list[systemname] = len(temp_list)
         print("%s: %d" %(systemname, patch_list[systemname]))
+    elif temp_list is None:
+        print("%s: unknown" %systemname)
     else:
         print("%s: %d" %(systemname, 0))
         
@@ -157,6 +161,8 @@ def get_servers_patches(mylist):
 
         if temp_list and len(temp_list) != 0:
             patch_list[j] = len(temp_list)
+        else:
+            patch_list[j] = 0
         
     return patch_list
 
@@ -174,6 +180,7 @@ def get_hosts(groupname):
     try:
         result_systemlist = session.systemgroup.listSystemsMinimal(key, groupname)
     except Exception as e:
+        print("Get group failed: %s" % groupname)
         mylogs.error("get systems list from group failed. %s" %(e))
         result2email()
         exit(1)
@@ -186,7 +193,8 @@ def get_hosts(groupname):
        
     patch_list = get_servers_patches(server_list)
     # print(patch_list, server_id_list)
-    print("Systeme mit installierbaren Patches:")
+    if not args.headerOff:
+        print("Systeme mit installierbaren Patches:")
     if len(patch_list) > 0:
         for s, k in patch_list.items():
             print("%s: %d" %(s, k))
