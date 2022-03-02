@@ -66,6 +66,7 @@ Sample command:
 parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("--systemname", help="Enter the system name you want to install all patches.",  required=True)
 parser.add_argument("--email", help="use this option if you want email notifcation, the log file will be sent to it. The email address is provided in the suma_config.yaml",  action="store_true")
+parser.add_argument("--force_reboot", help="Force system reboot through SUSE Manager even reboot is not needed.",  action="store_true")
 args = parser.parse_args()
 
 def get_login(path):
@@ -174,6 +175,27 @@ def reboot_host(systemname):
             mylogs.info("Nothing to reboot.")
     return "finished."
 
+def force_reboot_host(systemname):
+    
+    nowlater = datetime.datetime.now()
+    earliest_occurrence = DateTime(nowlater)
+    try:
+        result_systemid = session.system.getId(key, systemname)
+    except Exception as e:
+        mylogs.error("get systems ID failed. %s" %(e))
+        result2email()
+        exit(1)
+    
+    try:
+        result_job = session.system.scheduleReboot(key, result_systemid[0]['id'], earliest_occurrence)
+        mylogs.info("Reboot Jobs created %s" %(result_job))
+        print("Reboot Job:")
+        print("%s: %s" %(systemname, result_job))
+    except Exception as e:
+        mylogs.error("scheduling job failed %s." %(e))
+        
+    return "finished."
+
 
 if args.config:
     suma_data = get_login(args.config)
@@ -184,8 +206,12 @@ else:
     session, key = login_suma(suma_data)
 
 if isNotBlank(args.systemname):
-    result = reboot_host(args.systemname)
-    mylogs.info(result)
+    if args.force_reboot:
+        result = force_reboot_host(args.systemname)
+        mylogs.info(result)
+    else:
+        result = reboot_host(args.systemname)
+        mylogs.info(result)
 else:
     mylogs.info("systemname name is empty.")
     result2email()
