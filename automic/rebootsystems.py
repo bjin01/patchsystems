@@ -159,17 +159,20 @@ def reboot_host(systemname):
 
     if result_rebootsystems:
         if len(result_rebootsystems) > 0:
-            
+            reboot_needed = False
             for p in result_rebootsystems:
+                
                 if p['name'] in systemname:
                     try:
-                        
+                        reboot_needed = True
                         result_job = session.system.scheduleReboot(key, p['id'], earliest_occurrence)
                         mylogs.info("Reboot Jobs created %s" %(result_job))
                         print("Reboot Job:")
                         print("%s: %s" %(systemname, result_job))
                     except Exception as e:
                         mylogs.error("scheduling job failed %s." %(e))
+            if not reboot_needed:
+                print("No system needs reboot.")
         else:
             print("No system needs reboot.")
             mylogs.info("Nothing to reboot.")
