@@ -56,15 +56,17 @@ suma_password: <PASSWORD>
 notify_email: <EMAIL_ADDRESS>
 
 Sample command:
-              python3.6 checkjobstatus.py --config suma_config.yaml --jobid 12345
+              python3.6 checkjobstatus.py --config suma_config.yaml --jobid 12345 --check_interval 30 --timeout 2
               
               or 
 
-              python3.6 checkjobstatus.py --config suma_config.yaml --jobid 12345 --email
+              python3.6 checkjobstatus.py --config suma_config.yaml --jobid 12345 --check_interval 30 --timeout 2 --email
 '''))
 
 parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("--jobid", help="Enter the ID of the job you want to query status.",  required=True)
+parser.add_argument("--check_interval", help="Enter the time in seconds for repeated api call during job status recheck, not smaller than 30 seconds.",  required=True)
+parser.add_argument("--timeout", help="Enter the time in minutes for how long we do job status check, not smaller than 1 minute.",  required=True)
 parser.add_argument("--email", help="use this option if you want email notifcation, the log file will be sent to it. The email address is provided in the suma_config.yaml",  action="store_true")
 args = parser.parse_args()
 
@@ -130,10 +132,10 @@ def isNotBlank(myString):
 
 def jobstatus(jobid):
     
-    if suma_data['job_timeout']:
-        timeout = suma_data['job_timeout'] * 60
+    if int(args.timeout) >= 1:
+        timeout = int(args.timeout) * 60
     else:
-        timeout = 10
+        timeout = 60
     timeout_start = time.time()
 
     nowlater = datetime.datetime.now()
@@ -159,12 +161,13 @@ def jobstatus(jobid):
 
         mylogs.info("Job Status collected.")
 
-    
+        jobid_exist = False    
         if result_inprogress_actions:
             if len(result_inprogress_actions) > 0:
                 
                 for p in result_inprogress_actions:
                     if p['id'] == int(jobid):
+                        jobid_exist = True
                         mylogs.info("Job %d is in-progress, Job Name: %s" %(int(jobid), p['name']))
                         #print("%s: %d: inprogress" %(p['type'], int(jobid)))
                         continue
@@ -175,6 +178,7 @@ def jobstatus(jobid):
                 
                 for p in result_failed_actions:
                     if p['id'] == int(jobid):
+                        jobid_exist = True
                         mylogs.info("Job %d is failed, Job Name: %s" %(int(jobid), p['name']))
                         #print("%s: %d: failed" %(p['type'], int(jobid)))
                         return f"{p['type']}: {jobid}: failed"
@@ -185,11 +189,18 @@ def jobstatus(jobid):
                 
                 for p in result_completed_actions:
                     if p['id'] == int(jobid):
+                        jobid_exist = True
                         mylogs.info("Job %d is completed, Job Name: %s" %(int(jobid), p['name']))
                         #print("%s: %d: completed" %(p['type'], int(jobid)))
                         return f"{p['type']}: {jobid}: completed"
         
-        time.sleep(120)
+        if not jobid_exist:
+            print("Job ID does not exist: %s" % int(jobid))
+            mylogs.info("Job ID does not exist: %s" % int(jobid))
+            suma_logout(session, key)
+            exit(1)
+
+        time.sleep(int(args.check_interval))
     return f"{p['type']}: {jobid}: timeout"
 
 if args.config:
@@ -199,6 +210,16 @@ else:
     conf_file = "/root/suma_config.yaml"
     suma_data = get_login(conf_file)
     session, key = login_suma(suma_data)
+
+if not isNotBlank(args.check_interval):
+    mylogs.error("You did not provide parameter check_interval.")
+    print("You did not provide parameter check_interval")
+    exit(1)
+
+if not isNotBlank(args.timeout):
+    mylogs.error("You did not provide parameter timeout.")
+    print("You did not provide parameter timeout")
+    exit(1)
 
 if isNotBlank(args.jobid):
     result = jobstatus(args.jobid)

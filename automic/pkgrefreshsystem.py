@@ -44,7 +44,7 @@ mylogs.addHandler(file)
 
 parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
-This Script patches a single system in SUSE Manager.
+This Script schedules package refresh for a single system in SUSE Manager.
 
 You need a suma_config.yaml file with login and email notification address.
 If email notification will be used then you need to have mutt email client installed. 
@@ -56,16 +56,17 @@ suma_password: <PASSWORD>
 notify_email: <EMAIL_ADDRESS>
 
 Sample command:
-              python3.6 checkhosts.py --config suma_config.yaml --systemname mytestsystem.domain.local
+              python3.6 pkgrefreshsystem.py --config suma_config.yaml --systemname mytestsystem.domain.local
               
               or 
 
-              python3.6 checkhosts.py --config suma_config.yaml --systemname mytestsystem.domain.local --email
+              python3.6 pkgrefreshsystem.py --config suma_config.yaml --systemname mytestsystem.domain.local --email
 '''))
 
 parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("--systemname", help="Enter the system name you want to install all patches.",  required=True)
 parser.add_argument("--email", help="use this option if you want email notifcation, the log file will be sent to it. The email address is provided in the suma_config.yaml",  action="store_true")
+parser.add_argument("--force_reboot", help="Force system reboot through SUSE Manager even reboot is not needed.",  action="store_true")
 args = parser.parse_args()
 
 def get_login(path):
@@ -121,22 +122,6 @@ def printdict(dict_object):
         
     mylogs.info("----------------------------------------------------")
 
-def get_servers_patches(mylist):
-
-    patch_list = {}
-    temp_server_list = []
-    for i, j in mylist.items():
-        try:
-            temp_list = session.system.getRelevantErrata(key, i)
-            #mylogs.info("Host: %s    %d patches." %(j, len(temp_list)))
-        except:
-            mylogs.error("failed to obtain patch list from %s" %(j))
-
-        if temp_list and len(temp_list) != 0:
-            patch_list[j] = len(temp_list)
-        
-    return patch_list
-
 def isNotBlank(myString):
     if myString and myString.strip():
         #myString is not None AND myString is not empty or blank
@@ -144,41 +129,36 @@ def isNotBlank(myString):
     #myString is None OR myString is empty or blank
     return False
 
-def patch_host(systemname):
+def pkg_refresh_host(systemname):
     
     nowlater = datetime.datetime.now()
     earliest_occurrence = DateTime(nowlater)
     try:
         result_systemid = session.system.getId(key, systemname)
+        #print(result_systemid)
     except Exception as e:
-        mylogs.error("get systems id failed. %s" %(e))
+        mylogs.error("get system ID failed. %s" %(e))
         result2email()
         suma_logout(session, key)
         exit(1)
-    mylogs.info("Systems is found.")
+    mylogs.info("system ID found.")
 
     if result_systemid:
         try:
-            temp_list = session.system.getRelevantErrata(key, result_systemid[0]['id'])
-            mylogs.info("Host: %s    %d patches." %(systemname, len(temp_list)))
-        except:
-            mylogs.error("failed to obtain patch list from %s" %(systemname))
-        if len(temp_list) > 0:
-            patch_list = []
-            server_id_list = []
-            for p in temp_list:
-                patch_list.append(p['id'])
-            try:
-                server_id_list.append(result_systemid[0]['id'])
-                result_job = session.system.scheduleApplyErrata(key, server_id_list, patch_list, earliest_occurrence, True, True)
-                mylogs.info("Jobs created %s" %(result_job[0]))
-                print("Patch Job:")
-                print("%s: %s" %(systemname, result_job[0]))
-            except Exception as e:
-                mylogs.error("scheduling job failed %s." %(e))
-        else:
-            print("Nothing to do.")
-            mylogs.info("Nothing to install. Either already installed or channels not available to the systems.")
+            result_job = session.system.schedulePackageRefresh(key, result_systemid[0]['id'], earliest_occurrence)
+            mylogs.info("Package Refresh Job created %s" %(result_job))
+            print("Package_refresh Job:")
+            print("%s: %s" %(systemname, result_job))
+        except Exception as e:
+            mylogs.error("scheduling package refresh job failed %s." %(e))
+            print("scheduling package refresh job failed %s." %(e))
+            suma_logout(session, key)
+            exit(1)
+    else:
+        print("No system found. %s" % systemname)
+        mylogs.error("No system found. %s" % systemname)
+        suma_logout(session, key)
+        exit(1)
     return "finished."
 
 
@@ -191,12 +171,12 @@ else:
     session, key = login_suma(suma_data)
 
 if isNotBlank(args.systemname):
-    result = patch_host(args.systemname)
+    result = pkg_refresh_host(args.systemname)
     mylogs.info(result)
 else:
     mylogs.info("systemname name is empty.")
-    suma_logout(session, key)
     result2email()
+    suma_logout(session, key)
     exit(1)
     
 suma_logout(session, key)

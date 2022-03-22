@@ -59,7 +59,7 @@ Sample command:
 
               or 
 
-              python3.6 checkhosts.py --config /root/suma_config.yaml --group api_group_test
+              python3.6 checkhosts.py --config /root/suma_config.yaml --systemname abc.mydomain.net
 The script lists hosts and if there are patches to be installed of a given group and send email notifications optionally.'''))
 
 parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
@@ -129,6 +129,7 @@ def get_single_server_patches(systemname):
     except Exception as e:
         mylogs.error("get systems list from group failed. %s" %(e))
         result2email()
+        suma_logout(session, key)
         exit(1)
     try:
         temp_list = session.system.getRelevantErrata(key, result_system[0]['id'])
@@ -183,6 +184,7 @@ def get_hosts(groupname):
         print("Get group failed: %s" % groupname)
         mylogs.error("get systems list from group failed. %s" %(e))
         result2email()
+        suma_logout(session, key)
         exit(1)
     mylogs.info("List of Systems is ready.")
 
@@ -209,6 +211,11 @@ else:
     suma_data = get_login(conf_file)
     session, key = login_suma(suma_data)
 
+if args.group and args.systemname:
+    print("You can only use either --systemname or --group. Try again")
+    suma_logout(session, key)
+    exit(1)
+
 if isNotBlank(args.group):
     
     result = get_hosts(args.group)
@@ -219,6 +226,7 @@ elif isNotBlank(args.systemname):
 else:
     mylogs.info("group name is empty.")
     result2email()
+    suma_logout(session, key)
     exit(1)
     
 suma_logout(session, key)
