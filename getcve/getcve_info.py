@@ -84,7 +84,6 @@ def login_suma(login):
     SUMA = "http://" + login['suma_user'] + ":" + login['suma_password'] + "@" + login['suma_host'] + "/rpc/api"
     with ServerProxy(SUMA) as session_client:
         session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
-        print("Login good.")
     return session_client, session_key
 
 def suma_logout(session, key):
@@ -215,6 +214,7 @@ def get_systempatch_status(cve):
         result_systempatch_status = session.audit.listSystemsByPatchStatus(key, cve, patchstatus_filter)
     except Exception as e:
         mylogs.error("get system patch status failed. %s" %(e))
+        print("Failed to query the {}, no info found".format(cve))
         result2email()
         suma_logout(session, key)
         exit(1)
@@ -232,8 +232,6 @@ def get_systempatch_status(cve):
             result_single['groups'] = get_systemgroups(i['system_id'])
             result_single['base_channel'] = get_subscripedBaseChannel(i['system_id'])
             finalresult.append(result_single)
-
-            #print("{}, {}, {}, {}".format(i['system_id'], i['patch_status'], i['channel_labels'], i['errata_advisories']))
     else:
         print("Nothing returned")
         
