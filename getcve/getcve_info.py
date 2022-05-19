@@ -131,7 +131,8 @@ def get_affectedsystems(advisory_nme):
     
     if len(result_affectedsystems) > 0:
         for i in result_affectedsystems:
-            print(i)
+            True
+            #print(i)
     else:
         print("No effected systems found.")
     return
@@ -171,7 +172,7 @@ def get_subscripedBaseChannel(id):
         result2email()
         suma_logout(session, key)
         exit(1)
-    print(result_basechannel)
+    #print(result_basechannel)
     if len(result_basechannel) > 0:
         return result_basechannel['name']
 
@@ -182,8 +183,9 @@ def get_subscripedBaseChannel(id):
     return "Nothing"
 
 def create_csv_report(finalresult):
+    csvfile = "/var/log/cve_info.csv"
     if len(finalresult):
-        with open('/var/log/cve_info.csv', 'w', newline='') as file:
+        with open(csvfile, 'w', newline='') as file:
             fieldnames = ['system_id', 'name', 'patch_name', 'patch_status', 'in_Channel', 'groups', 'base_channel']
             writer = csv.writer(file)
             writer.writerow(fieldnames)
@@ -206,6 +208,7 @@ def create_csv_report(finalresult):
                 newline.append(groups)
                 newline.append(i['base_channel'])
                 writer.writerow(newline)
+            print("Please find the csv file in: {}".format(csvfile))    
     return
 
 def get_systempatch_status(cve):
@@ -218,10 +221,9 @@ def get_systempatch_status(cve):
         result2email()
         suma_logout(session, key)
         exit(1)
-    print(result_systempatch_status)
     if len(result_systempatch_status) > 0:
-        print("----")
-        print("ID \tStatus \t\tChannel \tPatch_name")
+        #print("----")
+        #print("ID \tStatus \t\tChannel \tPatch_name")
         for i in result_systempatch_status:
             result_single = {}
             result_single['system_id'] = i['system_id']
@@ -254,24 +256,8 @@ def get_cve(cve):
         print("----\n")
         for i in result_cve:
             
-            print("{}: {} - {} \t".format(i['advisory_name'], i['advisory_type'], i['advisory_synopsis']))
-            get_affectedsystems(i['advisory_name'])
-            
-    """ try:
-        temp_list = session.system.getRelevantErrata(key, result_system[0]['id'])
-        #mylogs.info("Host: %s  %d patches." %(j, len(temp_list)))
-    except:
-        temp_list = None
-        mylogs.error("failed to obtain patch list from %s" %(systemname))
-
-    if temp_list is not None:
-        patch_list[systemname] = len(temp_list)
-        print("%s: %d" %(systemname, patch_list[systemname]))
-    elif temp_list is None:
-        print("%s: unknown" %systemname)
-    else:
-        print("%s: %d" %(systemname, 0)) """
-        
+            #print("{}: {} - {} \t".format(i['advisory_name'], i['advisory_type'], i['advisory_synopsis']))
+            get_affectedsystems(i['advisory_name'])     
     return True
 
 
