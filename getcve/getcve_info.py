@@ -16,7 +16,7 @@ from os import access, R_OK
 from os.path import isfile
 
 pid = os.getpid()
-logfilename = "/var/log/rhn/getcve_info_" + str(pid) + ".log"
+logfilename = "/var/log/rhn/getcve_info.log"
 mylogs = logging.getLogger(__name__)
 mylogs.setLevel(logging.DEBUG)
 #file handler adding here, log file should be overwritten every time as this will be sent via email
@@ -212,7 +212,7 @@ def create_csv_report(finalresult):
     return
 
 def get_systempatch_status(cve):
-    patchstatus_filter = ["AFFECTED_PATCH_INAPPLICABLE", "AFFECTED_PATCH_APPLICABLE"]
+    patchstatus_filter = ["AFFECTED_PATCH_INAPPLICABLE", "AFFECTED_PATCH_APPLICABLE", "NOT_AFFECTED", "PATCHED"]
     try:
         result_systempatch_status = session.audit.listSystemsByPatchStatus(key, cve, patchstatus_filter)
     except Exception as e:
