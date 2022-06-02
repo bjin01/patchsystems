@@ -3,5 +3,7 @@ contentlifecyclemgmt/centos*
 contentlifecyclemgmt/grep*
 contentlifecyclemgmt/perl-md*
 grep*.yaml
+*.json
+*.log
 *.key
 __Pycache__

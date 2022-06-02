@@ -21,7 +21,7 @@ Sample command:
               python3.6 jobstatus.py -c /root/suma_config.yaml -f ./jobs.json -o /var/log/jobstatus_list.log\n \
 Check Job status of the systems. The output will be shown in terminal and written to a local file 'jobstatus_list.log' ''')) 
 
-parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
+parser.add_argument("-c", "--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("-f", "--jsonfile", help="Enter the json file name inluding path. e.g. ~/user/joblist.json ",  required=True)
 parser.add_argument("-o", "--output_file", help="Enter the output file name inluding path. e.g. /var/log/jobstatus_list.log ",  required=False)
 args = parser.parse_args()
@@ -62,7 +62,7 @@ def suma_logout(session, key):
 def write_status():
     #print(tabulate([status_update_dict], headers=['Server_Name', 'Job_Type',  'JobID',  'Status']))
     print_srv_name = '{0: <30}'.format(status_update_dict['servername'])
-    for i,  j in status_update_dict.iteritems():
+    for i,  j in status_update_dict.items():
             if i == 'servername':
                 srv_name = str(j)
             if i == 'JobID':
@@ -82,7 +82,7 @@ def write_status():
     if final_status[srv_name]['status'] == "in_Progress":
         print_j_status = '\033[93m{0: >10}\033[00m'.format(final_status[srv_name]['status'])
     print_jobid = '{0: <10}'.format(final_status[srv_name]['jobid'])
-    print("%s %s %s "  %(print_srv_name, print_jobid, print_j_status))
+    print("%s %s %s \t%s"  %(print_srv_name, print_jobid, final_status[srv_name]['type'], print_j_status))
     if args.output_file:
         with open(args.output_file, "a") as write_file:
             write_file.write(print_srv_name + '\t' + j_type + '\t' + jobid + '\t' +  j_status + '\n')
@@ -164,63 +164,34 @@ def main_loop():
 
         copy_jobstatus_dict = deepcopy(jobstatus_dict)
 
-        print("\n\033[96mPatch Job Status:\033[00m")
+        print("\n\033[96mJob Status:\033[00m")
         print('{0: <30}'.format('System Name') + '{0: <10}'.format('JobID') + '{0: >15}'.format('Job Status' ))
         print('-----------------------------------------------------------------------------------------')
         if args.output_file:
             with open(args.output_file, "a") as write_file:
                 write_file.write("\nPatch Job Status:\n")
-        for k, v in jobstatus_dict.iteritems():
-        
-            for a,  b in v.iteritems():
+        for k, v in jobstatus_dict.items():
+            server_id = 0
+            jobid_list = []
+            jobstatus = None
+
+            for a,  b in v.items():
                 if a == 'serverid':
-                        server_id = b
+                    server_id = b
                 if 'jobs' in a:
-                    for jobid,  jobstatus in b.iteritems():
-                        completed_return = completed(int(jobid), int(server_id),  a)
-                        #if completed_return == 0:
-                        failed_return = failed(int(jobid), int(server_id),  a)
-                        #if failed_return == 0:
-                        progress_return = inprogress(int(jobid), int(server_id),  a)
+                    jobstatus = a
+                    for jobid, _ in b.items():
+                        jobid_list.append(jobid)
+            
+            if len(jobid_list) > 0 and int(server_id) != 0 :
+                for j in jobid_list:
+                    completed_return = completed(int(j), int(server_id),  jobstatus)
+                    #if completed_return == 0:
+                    failed_return = failed(int(jobid), int(server_id),  jobstatus)
+                    #if failed_return == 0:
+                    progress_return = inprogress(int(jobid), int(server_id),  jobstatus)
 
-        print("\n\033[96mScheduled Reboot Job Status:\033[00m")
-        print('{0: <30}'.format('System Name') + '{0: <10}'.format('JobID') + '{0: >15}'.format('Job Status' ))
-        print('-----------------------------------------------------------------------------------------')
-        if args.output_file:
-            with open(args.output_file, "a") as write_file:
-                write_file.write("\n\nReboot Job Status:\n")
-        for k, v in jobstatus_dict.iteritems():
         
-            for a,  b in v.iteritems():
-                if a == 'serverid':
-                        server_id = b
-                if a == 'Reboot_jobs':
-                    for jobid,  jobstatus in b.iteritems():
-                        completed_return = completed(int(jobid), int(server_id),  a)
-                        if completed_return == 0:
-                                failed_return = failed(int(jobid), int(server_id),  a)
-                        if failed_return == 0:
-                                progress_return = inprogress(int(jobid), int(server_id),  a)
-
-        print("\n\033[96mAuto Reboot (kernel updates) Job Status:\033[00m")
-        print('{0: <30}'.format('System Name') + '{0: <10}'.format('JobID') + '{0: >15}'.format('Job Status' ))
-        print('-----------------------------------------------------------------------------------------')
-        if args.output_file:
-            with open(args.output_file, "a") as write_file:
-                write_file.write("\n\nauto Reboot Job Status:\n")
-        for k, v in jobstatus_dict.iteritems():
-        
-            for a,  b in v.iteritems():
-                if a == 'serverid':
-                        server_id = b
-                if a == 'needReboot_jobs':
-                    for jobid,  jobstatus in b.iteritems():
-                        completed_return = completed(int(jobid), int(server_id),  a)
-                        if completed_return == 0:
-                                failed_return = failed(int(jobid), int(server_id),  a)
-                        if failed_return == 0:
-                                progress_return = inprogress(int(jobid), int(server_id),  a)
-
         if args.output_file:
             print("You can find the job status log in {}".format(args.output_file))
         
@@ -246,7 +217,3 @@ if __name__ == '__main__':
         suma_logout(session, key)
         print >> sys.stderr, '\nExiting by user request.\n'
         sys.exit(0)
-
-
-
-            
