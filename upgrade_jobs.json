@@ -1,0 +1,20 @@
+{
+    "caasp01.bo2go.home": {
+        "upgrade_jobs": {
+            "12390": "pending"
+        },
+        "serverid": 1000010173,
+        "Reboot_jobs": {
+            "12391": "pending"
+        }
+    },
+    "myutu20.bo2go.home": {
+        "upgrade_jobs": {
+            "12392": "pending"
+        },
+        "serverid": 1000010170,
+        "Reboot_jobs": {
+            "12393": "pending"
+        }
+    }
+}
