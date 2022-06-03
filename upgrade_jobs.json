@@ -1,14 +1,20 @@
 {
-    "caasp01.bo2go.home": {
+    "pxenode01": {
         "upgrade_jobs": {
-            "12432": "pending"
+            "12437": "pending"
         },
-        "serverid": 1000010173
+        "serverid": 1000010273,
+        "Reboot_jobs": {
+            "12438": "pending"
+        }
     },
     "myutu20.bo2go.home": {
         "upgrade_jobs": {
-            "12433": "pending"
+            "12439": "pending"
         },
-        "serverid": 1000010170
+        "serverid": 1000010170,
+        "Reboot_jobs": {
+            "12440": "pending"
+        }
     }
 }

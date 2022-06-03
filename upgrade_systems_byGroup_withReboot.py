@@ -94,9 +94,6 @@ def compare_upgrade_and_reboot_time():
             sys.exit(1)
     return
 
-#This is a new reboot request to allow reboot in given hours OR given exact time schedule.
-#But if both params provide than we exit as this can not be handled at same time.
-
 if args.in_hours:
     check_install_time = datetime.now() + timedelta(hours=int(args.in_hours))
 else:
@@ -158,10 +155,10 @@ def upgrade_os(e, pkg_upgradelist, earliest_occurrence):
     system_name = session.system.getName(key, e)
     if not upgradelist:
         mylogs.info("All good. No upgrades needed:\t %s" %(system_name['name']))
-        sys.exit(0)
+        
     if len(upgradelist) == 0:
         mylogs.info("All good. upgradelist - No upgrades. \t %s" %(system_name['name']))
-        sys.exit(0)
+        
         
     for s in upgradelist:
         pkg_upgradelist.append(s['to_package_id'])
@@ -179,7 +176,6 @@ def upgrade_os(e, pkg_upgradelist, earliest_occurrence):
             scheduleReboot(e,  system_name['name'])
     else:
         mylogs.info("No package to upgrade.")   
-        sys.exit(0)
 
 if args.group_name:
     grpfound = None
