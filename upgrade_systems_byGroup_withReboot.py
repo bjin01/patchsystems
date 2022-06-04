@@ -141,8 +141,8 @@ def scheduleReboot(serverid,  servername):
 
     except NameError:
         mylogs.info("No reboot job created.")
-        sys.exit(1)
-    
+        return
+    return    
     
 def json_write(mydict):
     json_file = "upgrade_jobs.json"
@@ -152,13 +152,10 @@ def json_write(mydict):
 
 def upgrade_os(e, pkg_upgradelist, earliest_occurrence):
     upgradelist = session.system.listLatestUpgradablePackages(key, e)
-    system_name = session.system.getName(key, e)
-    if not upgradelist:
-        mylogs.info("All good. No upgrades needed:\t %s" %(system_name['name']))
-        
+    system_name = session.system.getName(key, e)       
     if len(upgradelist) == 0:
         mylogs.info("All good. upgradelist - No upgrades. \t %s" %(system_name['name']))
-        
+        return
         
     for s in upgradelist:
         pkg_upgradelist.append(s['to_package_id'])
@@ -174,8 +171,6 @@ def upgrade_os(e, pkg_upgradelist, earliest_occurrence):
         mylogs.info("Job ID %s for %s %s has been created" %(str(system_actionid),  (str(e)), system_name['name']))
         if args.reboot == True:
             scheduleReboot(e,  system_name['name'])
-    else:
-        mylogs.info("No package to upgrade.")   
 
 if args.group_name:
     grpfound = None
