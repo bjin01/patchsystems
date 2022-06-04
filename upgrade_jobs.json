@@ -1,20 +1,11 @@
 {
     "pxenode01": {
         "upgrade_jobs": {
-            "12450": "pending"
+            "12457": "pending"
         },
         "serverid": 1000010273,
         "Reboot_jobs": {
-            "12451": "pending"
-        }
-    },
-    "myutu20.bo2go.home": {
-        "upgrade_jobs": {
-            "12452": "pending"
-        },
-        "serverid": 1000010170,
-        "Reboot_jobs": {
-            "12453": "pending"
+            "12458": "pending"
         }
     }
 }
