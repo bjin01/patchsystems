@@ -33,12 +33,13 @@ class Password(argparse.Action):
 parser = argparse.ArgumentParser()
 #parser.add_argument("-v", "--verbosity", action="count", default=0)
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
-This scripts queries job status by passing jobstatus json formatted file with jobid and serverid. 
+This script checks if the packages from SUMA DB also exist on local disk and if file checksum matches.  
 Sample command:
-              python3.6 jobstatus.py -c /root/suma_config.yaml -f ./jobs.json -o /var/log/jobstatus_list.log\n \
-Check Job status of the systems. The output will be shown in terminal and written to a local file 'jobstatus_list.log' ''')) 
+              python3.6 query_rpms.py -v debug -l sle-module-containers15-sp2-pool-x86_64\n \
 
-parser.add_argument("-v", "--verbose", help="show more output to stdout",  required=False)
+The output will be shown in terminal and written to log file '/var/log/rhn/query_rpms.log' ''')) 
+
+parser.add_argument("-v", "--verbose", help="enter \"debug\" for more output.",  required=False)
 parser.add_argument("-c", "--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("-l", "--channel_label", help="Enter the channel label name e.g. mychannel_sles15sp3-x86",  required=True)
 
@@ -199,5 +200,5 @@ if __name__ == '__main__':
         allpackages_id_list = get_listAllPackages(channels_return)
         mylogs.info("Total no of package IDs: {}".format(len(allpackages_id_list)))
         _ = check_rpm_file(allpackages_id_list)
-        mylogs.info("That's it.")
+        mylogs.info("That's it. Review the log file: {}".format(logfilename))
         suma_logout(session, key)
