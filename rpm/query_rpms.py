@@ -6,6 +6,7 @@ import os
 import hashlib
 import re
 import logging
+import psutil
 import argparse,  getpass,  textwrap, sys
 
 pid = os.getpid()
@@ -171,12 +172,11 @@ if __name__ == '__main__':
     else:
         stream.setLevel(logging.INFO)
         mylogs.addHandler(stream)
-    """ if args.verbose in "debug":
-        stream.setLevel(logging.DEBUG)
-        mylogs.addHandler(stream)
-    else:
-        stream.setLevel(logging.INFO)
-        mylogs.addHandler(stream) """
+
+    if psutil.virtual_memory()[2] >= 30:
+        mylogs.info("\033[93mThe memory usage is not optimal to run this script therefore we exit here.\033[00m")
+        mylogs.info("Memory Usage current: {}%".format(psutil.virtual_memory()[2]))
+        sys.exit(1)
 
     if args.config:
         suma_data = get_login(args.config)
