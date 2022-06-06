@@ -24,22 +24,16 @@ stream = logging.StreamHandler()
 streamformat = logging.Formatter("%(asctime)s:[pid %(process)d]:%(filename)s:%(levelname)s:%(message)s",datefmt="%H:%M:%S")
 
 
-class Password(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        if values is None:
-            values = getpass.getpass()
-        setattr(namespace, self.dest, values)
-
 parser = argparse.ArgumentParser()
 #parser.add_argument("-v", "--verbosity", action="count", default=0)
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
-This script checks if the packages from SUMA DB also exist on local disk and if file checksum matches.  
+This script retrieves package metadata from SUMA DB and checks existence of respective rpm\n on local disk and if rpm file checksum matches the checksum in DB.\n
 Sample command:
               python3.6 query_rpms.py -v debug -l sle-module-containers15-sp2-pool-x86_64\n \
 
 The output will be shown in terminal and written to log file '/var/log/rhn/query_rpms.log' ''')) 
 
-parser.add_argument("-v", "--verbose", help="enter \"debug\" for more output.",  required=False)
+parser.add_argument("-v", "--verbose", help="Get more output.",  action='store_true', required=False)
 parser.add_argument("-c", "--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("-l", "--channel_label", help="Enter the channel label name e.g. mychannel_sles15sp3-x86",  required=True)
 
@@ -171,12 +165,18 @@ def check_rpm_file(list_of_package_id):
 
 if __name__ == '__main__':
     mylogs.addHandler(file)
-    if args.verbose in "debug":
+    if args.verbose:
         stream.setLevel(logging.DEBUG)
         mylogs.addHandler(stream)
     else:
         stream.setLevel(logging.INFO)
         mylogs.addHandler(stream)
+    """ if args.verbose in "debug":
+        stream.setLevel(logging.DEBUG)
+        mylogs.addHandler(stream)
+    else:
+        stream.setLevel(logging.INFO)
+        mylogs.addHandler(stream) """
 
     if args.config:
         suma_data = get_login(args.config)
