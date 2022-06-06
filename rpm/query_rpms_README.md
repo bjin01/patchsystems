@@ -21,7 +21,10 @@ suma_password: suse1234
 python3.6 query_rpms.py -v -c ./suma_config.yaml -l sle-module-containers15-sp2-pool-x86_64-sap
 ```
 __If you provide a channel label that has child channels then all child channels will be "verified" as well.__
+
 __If the SUMA host memory usage is higher than 80% then the script gives a  warning and exits with error.__
+
 __If you use parameter "-v" for verbosity then you will get a bit more output.__
+
 __The output will be stored in a log file ```/var/log/rhn/query_rpms.log```__
 
