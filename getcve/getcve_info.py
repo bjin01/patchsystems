@@ -33,7 +33,7 @@ stream.setLevel(logging.DEBUG)
 #stream.setFormatter(streamformat)
 
 mylogs.addHandler(file)
-#mylogs.addHandler(stream)
+mylogs.addHandler(stream)
 
 """ class Password(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -186,7 +186,7 @@ def create_csv_report(finalresult):
     csvfile = "/var/log/cve_info.csv"
     if len(finalresult):
         with open(csvfile, 'w', newline='') as file:
-            fieldnames = ['system_id', 'name', 'patch_name', 'patch_status', 'in_Channel', 'groups', 'base_channel']
+            fieldnames = ['system_id', 'name', 'patch_name', 'patch_status', 'in_Channel', 'groups', 'base_channel', "comment"]
             writer = csv.writer(file)
             writer.writerow(fieldnames)
             for i in finalresult:
@@ -207,12 +207,27 @@ def create_csv_report(finalresult):
                 newline.append(in_channels)
                 newline.append(groups)
                 newline.append(i['base_channel'])
+                newline.append(i['comment'])
                 writer.writerow(newline)
             print("Please find the csv file in: {}".format(csvfile))    
     return
 
+def is_channel_in_subscribedChannels(systemid, channel_labels):
+    channel_with_patch_found = False
+    try:
+        result_subscribed_channels = session.system.listSubscribedChildChannels(key, systemid)
+    except Exception as e:
+        mylogs.error("get result_subscribed_channels failed. %s" %(e))
+    
+    for s in result_subscribed_channels:
+        for l in channel_labels:
+            if s['label'] in l:
+                channel_with_patch_found = True
+
+    return channel_with_patch_found
+
 def get_systempatch_status(cve):
-    patchstatus_filter = ["AFFECTED_PATCH_INAPPLICABLE", "AFFECTED_PATCH_APPLICABLE", "NOT_AFFECTED", "PATCHED"]
+    patchstatus_filter = ["AFFECTED_PATCH_INAPPLICABLE", "AFFECTED_PATCH_APPLICABLE", "NOT_AFFECTED", "PATCHED", "AFFECTED_PATCH_INAPPLICABLE_SUCCESSOR_PRODUCT"]
     try:
         result_systempatch_status = session.audit.listSystemsByPatchStatus(key, cve, patchstatus_filter)
     except Exception as e:
@@ -226,6 +241,7 @@ def get_systempatch_status(cve):
         #print("ID \tStatus \t\tChannel \tPatch_name")
         for i in result_systempatch_status:
             result_single = {}
+            result_single['comment'] = ""
             result_single['system_id'] = i['system_id']
             result_single['name'] = get_systemname(i['system_id'])
             result_single['patch_status'] = i['patch_status']
@@ -233,6 +249,10 @@ def get_systempatch_status(cve):
             result_single['patch_name'] = i['errata_advisories']
             result_single['groups'] = get_systemgroups(i['system_id'])
             result_single['base_channel'] = get_subscripedBaseChannel(i['system_id'])
+            if i['patch_status'] in "AFFECTED_PATCH_INAPPLICABLE_SUCCESSOR_PRODUCT":
+               result_single['comment'] = "Patch available, but system needs a newer product."
+            if i['patch_status'] in "AFFECTED_PATCH_APPLICABLE":
+               result_single['comment'] = "Patch is available and channels is subscribed."
             finalresult.append(result_single)
     else:
         print("Nothing returned")
