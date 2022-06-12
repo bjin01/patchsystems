@@ -35,13 +35,6 @@ stream.setLevel(logging.DEBUG)
 mylogs.addHandler(file)
 mylogs.addHandler(stream)
 
-""" class Password(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        if values is None:
-            values = getpass.getpass()
-
-        setattr(namespace, self.dest, values) """
-
 parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This Script retrieves information about patches for a given CVE Numer for all systems. Like CVE Audit and outputs in csv file.
@@ -60,6 +53,7 @@ Sample command:
 
               '''))
 
+parser.add_argument("-v", "--verbose", help="Get more output.",  action='store_true', required=False)
 parser.add_argument("--config", help="enter the config file name that contains login information e.g. /root/suma_config.yaml",  required=False)
 parser.add_argument("--cve", help="Enter the group name that you want to check.",  required=False)
 parser.add_argument("--email", help="use this option if you want email notifcation, the log file will be sent to it. The email address is provided in the suma_config.yaml",  action="store_true")
@@ -132,9 +126,9 @@ def get_affectedsystems(advisory_nme):
     if len(result_affectedsystems) > 0:
         for i in result_affectedsystems:
             True
-            #print(i)
+            mylogs.debug(i)
     else:
-        print("No effected systems found.")
+        mylogs.info("No effected systems found.")
     return
 
 def get_systemname(id):
@@ -175,9 +169,6 @@ def get_subscripedBaseChannel(id):
     #print(result_basechannel)
     if len(result_basechannel) > 0:
         return result_basechannel['name']
-
-        """ for i in result_basechannel:
-            print(i) """
     else:
         return "Nothing"
     return "Nothing"
@@ -209,7 +200,7 @@ def create_csv_report(finalresult):
                 newline.append(i['base_channel'])
                 newline.append(i['comment'])
                 writer.writerow(newline)
-            print("Please find the csv file in: {}".format(csvfile))    
+            mylogs.info("Please find the csv file in: {}".format(csvfile))    
     return
 
 def is_channel_in_subscribedChannels(systemid, channel_labels):
@@ -232,14 +223,15 @@ def get_systempatch_status(cve):
         result_systempatch_status = session.audit.listSystemsByPatchStatus(key, cve, patchstatus_filter)
     except Exception as e:
         mylogs.error("get system patch status failed. %s" %(e))
-        print("Failed to query the {}, no info found".format(cve))
+        mylogs.debug("Failed to query the {}, no info found".format(cve))
         result2email()
         suma_logout(session, key)
         exit(1)
     if len(result_systempatch_status) > 0:
-        #print("----")
-        #print("ID \tStatus \t\tChannel \tPatch_name")
+        mylogs.debug("----")
+        mylogs.debug("ID \tStatus \t\tChannel \tPatch_name \tcomment")
         for i in result_systempatch_status:
+            
             result_single = {}
             result_single['comment'] = ""
             result_single['system_id'] = i['system_id']
@@ -254,8 +246,9 @@ def get_systempatch_status(cve):
             if i['patch_status'] in "AFFECTED_PATCH_APPLICABLE":
                result_single['comment'] = "Patch is available and channels is subscribed."
             finalresult.append(result_single)
+            mylogs.debug("{} \t{} \t{} \t{} \t{}".format(i['system_id'], i['patch_status'], i['channel_labels'], i['errata_advisories'], result_single['comment']))
     else:
-        print("Nothing returned")
+        mylogs.info("Nothing returned")
         
     create_csv_report(finalresult)
     return
@@ -276,7 +269,7 @@ def get_cve(cve):
         print("----\n")
         for i in result_cve:
             
-            #print("{}: {} - {} \t".format(i['advisory_name'], i['advisory_type'], i['advisory_synopsis']))
+            mylogs.debug("{}: {} - {} \t".format(i['advisory_name'], i['advisory_type'], i['advisory_synopsis']))
             get_affectedsystems(i['advisory_name'])     
     return True
 
@@ -288,7 +281,7 @@ def get_servers_patches(mylist):
     for i, j in mylist.items():
         try:
             temp_list = session.system.getRelevantErrata(key, i)
-            #mylogs.info("Host: %s    %d patches." %(j, len(temp_list)))
+            mylogs.debug("Host: %s    %d patches." %(j, len(temp_list)))
         except:
             mylogs.error("failed to obtain patch list from %s" %(j))
 
@@ -313,7 +306,6 @@ def get_hosts(groupname):
     try:
         result_systemlist = session.systemgroup.listSystemsMinimal(key, groupname)
     except Exception as e:
-        print("Get group failed: %s" % groupname)
         mylogs.error("get systems list from group failed. %s" %(e))
         result2email()
         suma_logout(session, key)
@@ -328,12 +320,19 @@ def get_hosts(groupname):
     patch_list = get_servers_patches(server_list)
     # print(patch_list, server_id_list)
     if not args.headerOff:
-        print("Systeme mit installierbaren Patches:")
+        mylogs.info("Systeme mit installierbaren Patches:")
     if len(patch_list) > 0:
         for s, k in patch_list.items():
-            print("%s: %d" %(s, k))
+            mylogs.info("%s: %d" %(s, k))
     return "finished."
 
+
+if args.verbose:
+    stream.setLevel(logging.DEBUG)
+    mylogs.addHandler(stream)
+else:
+    stream.setLevel(logging.INFO)
+    mylogs.addHandler(stream)
 
 if args.config:
     suma_data = get_login(args.config)
