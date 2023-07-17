@@ -201,7 +201,9 @@ def buildproject(key,  projLabel):
     buildresult = 0
     if result_lookup_project:
         check_env_status(key, projLabel)
-        buildresult = session.contentmanagement.buildProject(key, projLabel)
+        current_time = time.localtime()
+        myversion = time.strftime('%Y-%m-%d', current_time)
+        buildresult = session.contentmanagement.buildProject(key, projLabel, myversion)
 
     if buildresult == 1:
             print("Build %s task: Successful"  %(projLabel))
