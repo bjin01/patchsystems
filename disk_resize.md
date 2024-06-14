@@ -10,6 +10,8 @@ LVM, multipath, and other disk configurations are not covered in this solution.
 
 ### Steps:
 ** 1. Extend the disk size in VMware - edit settings of the VM and change the disk size. e.g. from 24GB to 48GB.**
+
+__Note:
 __If the VM has snapshot levels, you need to delete all snapshots before you can extend the disk size.__
 
 **2. Check the disk size in the VM in running SLES system:**
@@ -37,7 +39,7 @@ vda    253:0    0   48G  0 disk
 ```
 The block device /dev/vda is now increased to 48GB.
 
-** For KVM and libvirt VMs after block device is increased you can use the following command to tell VM about the disk size change:**
+**For KVM and libvirt VMs after block device is increased you can use the following command to tell VM about the disk size change:**
 ```bash
 virsh blockresize --domain test1 vda --size 48GB
 ```
