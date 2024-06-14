@@ -9,10 +9,9 @@ This solution is tested for SLES VMs running on VMware with vmdk files for disk 
 LVM, multipath, and other disk configurations are not covered in this solution.
 
 ### Steps:
-** 1. Extend the disk size in VMware - edit settings of the VM and change the disk size. e.g. from 24GB to 48GB.**
+**1. Extend the disk size in VMware - edit settings of the VM and change the disk size. e.g. from 24GB to 48GB.**
 
-__Note:
-__If the VM has snapshot levels, you need to delete all snapshots before you can extend the disk size.__
+__Note: If the VM has snapshot levels, you need to delete all snapshots before you can extend the disk size.__
 
 **2. Check the disk size in the VM in running SLES system:**
 ```bash
@@ -244,7 +243,7 @@ df -hT
 free -m
 ```
 Sample output from btrfs filesystem after resizing:
-```
+```bash
 df -hT
 Filesystem     Type      Size  Used Avail Use% Mounted on
 devtmpfs       devtmpfs  4.0M     0  4.0M   0% /dev
