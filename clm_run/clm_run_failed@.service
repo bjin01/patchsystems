@@ -1,0 +1,5 @@
+[Unit]
+Description=SUSE Manager - email notification for failed service %n
+
+[Service]
+ExecStart=python3.6 /root/scripts/sendemail.py --server_host <SMTP-HOST> --address_from <SUMA-HOST> --address_to <recipient-email> --mail_subject "clm_run service %i failed." --mail_body "%n failed."
