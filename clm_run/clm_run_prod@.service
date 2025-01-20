@@ -1,0 +1,6 @@
+[Unit]
+Description=SUSE Manager - content lifecycle management promote stage for project %i
+OnFailure=clm_run_failed@%n.service
+
+[Service]
+ExecStart=/usr/bin/mgrctl exec "python3.6 /root/scripts/clm_run.py --promote --projLabel $i --envLabel test"
