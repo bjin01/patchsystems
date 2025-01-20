@@ -23,7 +23,8 @@ Check taskomatic logs in order to monitor the status of the build and promote ta
 
 place the systemd timer and service files under ```/etc/systemd/system/```
 
-Adapt the email address in [clm_run_failed\@.service](clm_run_failed@.service)
+Adapt the parameters in [clm_run_failed\@.service](clm_run_failed@.service) - this service file will be triggered if the build and promote service has failed and send email notifications via smtp.
+You can omit email notifications and by commentting out this line.
 run following systmctl commands to enable the desired services:
 ```
 systemctl enable clm_run_test@sles15sp5.timer
