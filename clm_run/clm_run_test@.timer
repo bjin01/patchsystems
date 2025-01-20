@@ -1,0 +1,9 @@
+[Unit]
+Description=SUSE Manager - content lifecycle management promote and build timer, run first Sunday each month at 6am.
+
+[Timer]
+OnCalendar=Sun *-*-1..7 06:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
