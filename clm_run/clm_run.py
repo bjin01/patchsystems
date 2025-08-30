@@ -4,14 +4,151 @@ import argparse,  getpass,  textwrap, time
 import datetime
 import yaml
 import os
+from cryptography.fernet import Fernet
+import logging
+import atexit
+import six
 from xmlrpc.client import ServerProxy, Error
 
-class Password(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        if values is None:
-            values = getpass.getpass()
+log = logging.getLogger("clm_run")
+log.propagate = False
+formatter = logging.Formatter('%(asctime)s | %(module)s | %(levelname)s | %(message)s') 
 
-        setattr(namespace, self.dest, values)
+if not any(isinstance(h, logging.StreamHandler) for h in log.handlers):
+    streamhandler = logging.StreamHandler()
+    streamhandler.setFormatter(formatter)
+    log.addHandler(streamhandler)
+
+_sessions = {}
+
+def set_log_level(log_level):
+    """Set the log level globally for the logger."""
+    if log_level.upper() == "DEBUG":
+        log.setLevel(logging.DEBUG)
+    else:
+        log.setLevel(logging.INFO)
+
+def encrypt_password(pwd):
+    key = Fernet.generate_key()
+    print("Randomly generated key! Keep it safely!: \n{}".format(key.decode()))
+    # Instance the Fernet class with the key
+    fernet = Fernet(key)
+    
+    # then use the Fernet class instance
+    # to encrypt the string string must
+    # be encoded to byte string before encryption
+    encrypted_pwd = fernet.encrypt(pwd.encode())
+    print("\nSave this encrypted password in your configuration file.\n{} ".format(encrypted_pwd.decode()))
+
+def _decrypt_password(password_encrypted, suma_key_file="/root/suma_key.yaml"):
+    
+    encrypted_pwd = ""
+    if not os.path.exists(suma_key_file):
+        log.error("No suma_key.yaml found")
+        if os.environ.get('SUMAKEY') == None: 
+            log.fatal("You also don't have ENV SUMAKEY set. Use unencrypted pwd.")
+            return str(password_encrypted)
+        else:
+            
+            encrypted_pwd = os.environ.get('SUMAKEY')
+    else:
+        
+        with open(suma_key_file, 'r') as file:
+            sumakey_dict = yaml.safe_load(file)
+            encrypted_pwd = sumakey_dict["SUMAKEY"]
+
+    if not encrypted_pwd == "":
+        saltkey = bytes(str(encrypted_pwd), encoding='utf-8')
+        fernet = Fernet(saltkey)
+        encmessage = bytes(str(password_encrypted), encoding='utf-8')
+        pwd = fernet.decrypt(encmessage)
+    else:
+        log.fatal("encrypted_pwd is empty. Use unencrypted pwd.")
+        return str(password_encrypted)        
+    
+    return pwd.decode()
+
+def _get_suma_configuration(suma_config_file="suma_config.yaml"):
+    '''
+    Return the configuration read from the configuration
+    file or directory
+    '''
+
+    try:
+        with open(suma_config_file, 'r') as file:
+            suma_config = yaml.safe_load(file)
+            if not suma_config:
+                suma_config = {}
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Configuration file '{suma_config_file}' not found.")
+    except yaml.YAMLError as e:
+        raise ValueError(f"Error parsing YAML file '{suma_config_file}': {e}")
+
+    if suma_config:
+        try:
+            suma_server = suma_config.get('suma_server', "localhost")
+            username = suma_config.get('suma_api_username', None)
+            password_encrypted = suma_config.get('suma_api_password', None)
+            password = _decrypt_password(password_encrypted, suma_config.get('suma_key_file', ""))
+            protocol = suma_config.get('protocol', 'https')
+            
+
+
+            if not username or not password:
+                log.error(
+                    'Username or Password has not been specified in the master '
+                    'configuration for %s', suma_server
+                )
+                return False
+
+            ret = {
+                'api_url': '{0}://{1}/rpc/api'.format(protocol, suma_server),
+                'username': username,
+                'password': password,
+                'servername': suma_server
+            }
+            return ret
+        except Exception as exc:  # pylint: disable=broad-except
+            log.error('Exception encountered: %s', exc)
+            return False
+
+    return False
+
+
+def _get_client_and_key(url, user, password, verbose=0):
+    '''
+    Return the client object and session key for the client
+    '''
+    session = {}
+    session['client'] = six.moves.xmlrpc_client.Server(url, verbose=verbose, use_datetime=True)
+
+    session['key'] = session['client'].auth.login(user, password)
+    return session
+
+
+def _disconnect_session(session):
+    '''
+    Disconnect API connection
+    '''
+    session['client'].auth.logout(session['key'])
+
+
+def _get_session(suma_config):
+    '''
+    Get session and key
+    '''
+    server = suma_config["servername"]
+    if server in _sessions:
+        return _sessions[server]
+
+    session = _get_client_and_key(suma_config['api_url'], suma_config['username'], suma_config['password'])
+    atexit.register(_disconnect_session, session)
+
+    client = session['client']
+    key = session['key']
+    _sessions[server] = (client, key)
+
+    return client, key
 
 parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
@@ -25,6 +162,8 @@ Sample command:
 The script can build project, update and promote stages or environments.
 Check taskomatic logs in order to monitor the status of the build and promote tasks e.g. # tail -f /var/log/rhn/rhn_taskomatic_daemon.log. '''))
 
+parser.add_argument("--encrypt_pwd", default="", help="provide password to encrypt it")
+parser.add_argument("--config", default="/root/suma_config.yaml", help="Path to config file")
 parser.add_argument("--listProject", action="store_true")
 parser.add_argument("--listEnvironment", action="store_true")
 parser.add_argument("--check_status", action="store_true")
@@ -38,6 +177,15 @@ args = parser.parse_args()
 
 status_text = ['built', 'building',  'generating_repodata']
 tasko_text = 'Check taskomatic logs in order to monitor the status of the build and promote tasks e.g. # tail -f /var/log/rhn/rhn_taskomatic_daemon.log.'
+
+if args.encrypt_pwd:
+    if args.encrypt_pwd.strip() != "":
+        clear_pwd = args.encrypt_pwd.strip()
+        encrypt_password(clear_pwd)
+        exit(0)
+    else:
+        log.warning("You provided a empty password to encryption. Exit.")
+        exit(1)
 
 def get_login(path):
     
@@ -248,9 +396,15 @@ def promoteenvironment(key,  projLabel,  envLabel):
         return False
     return promote_result
 
-conf_file = "/root/suma_config.yaml"
-suma_login = get_login(conf_file)
-session, key = login_suma(suma_login)
+
+suma_config = _get_suma_configuration(args.config)
+server = suma_config["servername"]
+
+try:
+    session, key = _get_session(suma_config)
+except Exception as exc:  # pylint: disable=broad-except
+    err_msg = 'Exception raised when connecting to spacewalk server ({0}): {1}'.format(server, exc)
+    log.error(err_msg)
 
 if args.listProject:
     try:

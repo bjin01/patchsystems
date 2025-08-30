@@ -1,3 +1,4 @@
-suma_host: bjsuma.bo2go.home
-suma_user: bjin
-suma_password: suse1234
+suma_server: bjsuma.bo2go.home
+suma_api_username: bjin
+suma_api_password: suse1234
+protocol: https
