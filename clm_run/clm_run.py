@@ -89,7 +89,7 @@ def _get_suma_configuration(suma_config_file="suma_config.yaml"):
             suma_server = suma_config.get('suma_server', "localhost")
             username = suma_config.get('suma_api_username', None)
             password_encrypted = suma_config.get('suma_api_password', None)
-            password = _decrypt_password(password_encrypted, suma_config.get('suma_key_file', ""))
+            password = _decrypt_password(password_encrypted, suma_config.get('suma_key_file', "/root/suma_key.yaml"))
             protocol = suma_config.get('protocol', 'https')
             
 
