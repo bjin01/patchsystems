@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import argparse,  getpass,  textwrap, time
-import datetime
+import argparse, textwrap, time
+import datetime 
 import yaml
 import os
 from cryptography.fernet import Fernet
@@ -217,7 +217,10 @@ def printdict(dict_object):
         print("Item---------------------------------------------")
         for k, v in i.items():
             if k in "lastBuildDate":
-                converted = datetime.datetime.strptime(v.value, "%Y%m%dT%H:%M:%S")
+                if isinstance(v, datetime.datetime):
+                    converted = v
+                else:
+                    converted = datetime.datetime.strptime(v, "%Y%m%dT%H:%M:%S")
                 print ("{:<20}".format(k), "{:<20}".format(converted.strftime("%d.%m.%Y, %H:%M")))
             else:
                 print ("{:<20}".format(k), "{:<20}".format(v))
