@@ -198,21 +198,6 @@ def get_login(path):
 
     return login
 
-def login_suma(login):
-    MANAGER_URL = "https://"+ login['suma_host'] +"/rpc/api"
-    MANAGER_LOGIN = login['suma_user']
-    MANAGER_PASSWORD = login['suma_password']
-    SUMA = "http://" + login['suma_user'] + ":" + login['suma_password'] + "@" + login['suma_host'] + "/rpc/api"
-    with ServerProxy(SUMA) as session_client:
-
-    #session_client = xmlrpclib.Server(MANAGER_URL, verbose=0)
-        session_key = session_client.auth.login(MANAGER_LOGIN, MANAGER_PASSWORD)
-    return session_client, session_key
-
-def suma_logout(session, key):
-    session.auth.logout(key)
-    return
-
 """ def printdict(dict_object):
     for i in dict_object:
         keys = i.keys()
@@ -439,4 +424,4 @@ else:
     print("Please verify you entered correct parameters. Exiting.")
 
     
-suma_logout(session, key)
+_disconnect_session(session)
