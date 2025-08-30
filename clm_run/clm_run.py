@@ -20,6 +20,7 @@ if not any(isinstance(h, logging.StreamHandler) for h in log.handlers):
     log.addHandler(streamhandler)
 
 _sessions = {}
+session_object_get_session = {}
 
 def set_log_level(log_level):
     """Set the log level globally for the logger."""
@@ -119,11 +120,11 @@ def _get_client_and_key(url, user, password, verbose=0):
     '''
     Return the client object and session key for the client
     '''
-    session = {}
-    session['client'] = six.moves.xmlrpc_client.Server(url, verbose=verbose, use_datetime=True)
+    session_object = {}
+    session_object['client'] = six.moves.xmlrpc_client.Server(url, verbose=verbose, use_datetime=True)
 
-    session['key'] = session['client'].auth.login(user, password)
-    return session
+    session_object['key'] = session_object['client'].auth.login(user, password)
+    return session_object
 
 
 def _disconnect_session(session):
@@ -141,11 +142,11 @@ def _get_session(suma_config):
     if server in _sessions:
         return _sessions[server]
 
-    session = _get_client_and_key(suma_config['api_url'], suma_config['username'], suma_config['password'])
-    atexit.register(_disconnect_session, session)
+    session_object_get_session = _get_client_and_key(suma_config['api_url'], suma_config['username'], suma_config['password'])
+    atexit.register(_disconnect_session, session_object_get_session)
 
-    client = session['client']
-    key = session['key']
+    client = session_object_get_session['client']
+    key = session_object_get_session['key']
     _sessions[server] = (client, key)
 
     return client, key
@@ -427,4 +428,4 @@ else:
     print("Please verify you entered correct parameters. Exiting.")
 
     
-_disconnect_session(session)
+_disconnect_session(session_object_get_session)
