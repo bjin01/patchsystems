@@ -20,7 +20,6 @@ if not any(isinstance(h, logging.StreamHandler) for h in log.handlers):
     log.addHandler(streamhandler)
 
 _sessions = {}
-session_object_get_session = {}
 
 def set_log_level(log_level):
     """Set the log level globally for the logger."""
@@ -142,11 +141,11 @@ def _get_session(suma_config):
     if server in _sessions:
         return _sessions[server]
 
-    session_object_get_session = _get_client_and_key(suma_config['api_url'], suma_config['username'], suma_config['password'])
-    atexit.register(_disconnect_session, session_object_get_session)
+    session_object = _get_client_and_key(suma_config['api_url'], suma_config['username'], suma_config['password'])
+    atexit.register(_disconnect_session, session_object)
 
-    client = session_object_get_session['client']
-    key = session_object_get_session['key']
+    client = session_object['client']
+    key = session_object['key']
     _sessions[server] = (client, key)
 
     return client, key
@@ -426,6 +425,3 @@ elif args.promote and args.projLabel and args.envLabel:
         print("something went wrong with promote environment.")
 else:
     print("Please verify you entered correct parameters. Exiting.")
-
-    
-_disconnect_session(session_object_get_session)
