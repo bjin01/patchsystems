@@ -2,4 +2,19 @@
 Description=SUSE Manager - email notification for failed service %n
 
 [Service]
-ExecStart=python3.6 /root/scripts/sendemail.py --server_host <SMTP-HOST> --address_from <SUMA-HOST> --address_to <recipient-email> --mail_subject "clm_run service %i failed." --mail_body "%n failed."
+Type=oneshot
+# Provide the required input parameters in an environment faile
+# The content should contain these variables:
+# SMTP_HOST=localhost
+# SUMA_HOST=mysuma.example.com
+# RECIPIENT=tesuser@example.com
+
+EnvironmentFile=-/etc/sendemail.conf
+
+#Change the python binary path. On SLES15 you have to use python3.6
+ExecStart=/usr/bin/python3.11 /root/scripts/sendmail.py \
+--server_host $SMTP_HOST \
+--address_from $SUMA_HOST \
+--address_to $RECIPIENT \
+--mail_subject "clm_run service %i failed." \
+--mail_body "%i failed."

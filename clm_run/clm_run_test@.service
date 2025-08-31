@@ -3,4 +3,5 @@ Description=SUSE Manager - content lifecycle management build first stage for pr
 OnFailure=clm_run_failed@%n.service
 
 [Service]
-ExecStart=/usr/bin/mgrctl exec "python3.6 /root/scripts/clm_run.py --build --projLabel %i"
+# The PROJ is a variable and should get the instance name of the service which in turn is the clm project label.
+ExecStart=/usr/bin/mgrctl exec "python3.6 /root/scripts/clm_run.py --projLabel $PROJ" -e PROJ=%i
