@@ -154,25 +154,35 @@ parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 This scripts helps to manage content lifecycle management projects. 
 Sample command:
-              python clm_run.py --listProject
-              python clm_run.py --listEnvironment --projLabel myprojlabel
-              python clm_run.py --build --projLabel myprojlabel \n \
-              python clm_run.py --promote --projLabel myprojlabel --envLabel teststage  \n \
-              python clm_run.py --check_status --projLabel myprojlabel --envLabel teststage  \n \
+            python clm_run.py --encrypt_pwd MySecretPassword
+            python clm_run.py --config /path/to/suma_config.yaml --listProjects  
+            python clm_run.py --config /path/to/suma_config.yaml --listEnvironment --projLabel myprojlabel
+            python clm_run.py --config /path/to/suma_config.yaml --build --projLabel myprojlabel \n \
+            python clm_run.py --config /path/to/suma_config.yaml --promote --projLabel myprojlabel --envLabel teststage  \n \
+            python clm_run.py --config /path/to/suma_config.yaml --check_status --projLabel myprojlabel --envLabel teststage  \n \
 The script can build project, update and promote stages or environments.
 Check taskomatic logs in order to monitor the status of the build and promote tasks e.g. # tail -f /var/log/rhn/rhn_taskomatic_daemon.log. '''))
 
 parser.add_argument("--encrypt_pwd", default="", help="provide password to encrypt it")
 parser.add_argument("--config", default="/root/suma_config.yaml", help="Path to config file")
-parser.add_argument("--listProject", action="store_true")
+parser.add_argument("--listProjects", action="store_true")
 parser.add_argument("--listEnvironment", action="store_true")
 parser.add_argument("--check_status", action="store_true")
 parser.add_argument("--build", action="store_true")
 parser.add_argument("--promote", action="store_true")
-parser.add_argument("--projname", help="Enter the desired project name. e.g. myproject",  required=False)
 parser.add_argument("--projLabel", help="Enter the project label. e.g. mytest",  required=False)
 parser.add_argument("--envLabel", help="Enter the environment label. e.g. dev",  required=False)
 args = parser.parse_args()
+
+# Validate argument combinations
+if args.listEnvironment and not args.projLabel:
+    parser.error("--listEnvironment requires --projLabel to be specified")
+
+if args.promote and not (args.projLabel and args.envLabel):
+    parser.error("--promote requires both --projLabel and --envLabel to be specified")
+
+if args.build and not args.projLabel:
+    parser.error("--build requires --projLabel to be specified")
 
 
 status_text = ['built', 'building',  'generating_repodata']
@@ -394,12 +404,12 @@ except Exception as exc:  # pylint: disable=broad-except
     err_msg = 'Exception raised when connecting to spacewalk server ({0}): {1}'.format(server, exc)
     log.error(err_msg)
 
-if args.listProject:
+if args.listProjects:
     try:
         ret = listproject(key)
     except Exception as ex:
         print("not found %s" %ex)
-        print('something went wrong with listproject')
+        print('something went wrong with listprojects.')
 elif args.check_status and args.projLabel: 
     if args.envLabel:
         check_env_status(key, args.projLabel, args.envLabel)
